@@ -9,9 +9,9 @@
                 <form string="FDS PostFinance files">
                     <group>
                        <field name="fds_account_id" />
-                       <field name="bankStatment_id" attrs="{'invisible':[('state', '!=', 'finish')]}"/>
-                       <field name="files" filename="filename" attrs="{'invisible':[('state', '=', 'finish')]}"/>
-                       <field name="filename" attrs="{'invisible':[('state', '!=', 'finish')]}"/>
+                       <field name="bank_statement_id" attrs="{'invisible':[('state', '!=', 'done')]}"/>
+                       <field name="files" filename="filename" attrs="{'invisible':[('state', '=', 'done')]}"/>
+                       <field name="filename" attrs="{'invisible':[('state', '!=', 'done')]}"/>
                        <field name="directory_id" />
                        <field name="journal_id" />
                        <field name="state" />
