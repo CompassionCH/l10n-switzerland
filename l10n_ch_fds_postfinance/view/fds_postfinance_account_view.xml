@@ -13,7 +13,7 @@
                     <field name="name" />
                     <field name="hostname" />
                     <field name="username" />
-                    <field name="postfinance_mail" />
+                    <field name="postfinance_email" />
                     <field name="company_contact_id" />
                     <field name="fds_authentication_keys_ids" />
                 </tree>
@@ -35,7 +35,7 @@
                     <group>
                         <field name="hostname" />
                         <field name="username" />
-                        <field name="postfinance_mail" />
+                        <field name="postfinance_email" />
                         <field name="company_contact_id" />
                     </group>
                     <notebook>
@@ -50,7 +50,7 @@
                                     <field name="user_id" />
                                     <field name="public_key" filename="pub_filename" />
                                     <field name="pub_filename" invisible="True"/>
-                                    <field name="active_key" />
+                                    <field name="key_active" />
                                 </tree>
                             </field>
                         </page>
@@ -98,11 +98,9 @@
             <field name="view_mode">tree,form</field>
             <field name="help" type="html">
                 <p class="oe_view_nocontent_create">
-                Click to create a new PostFinance File Delivery Services (FDS) Account.
-                </p><p>
+                Click to create a new PostFinance File Delivery Services (FDS) Account.</p><p>
                 FDS acts as a gateway in the IT security system between Swiss Post’s Intranet and external networks. It enables
-                files and applications to be exchanged among internal and external partners of Post CH Ltd.
-                </p>
+                files and applications to be exchanged among internal and external partners of Post CH Ltd.</p>
             </field>
         </record>
 
@@ -134,7 +132,7 @@
             <field name="name">fds.postfinance.files.form</field>
             <field name="model">fds.postfinance.account</field>
             <field name="arch" type="xml">
-                <form string="FDS Postfinance files" create="false">
+                <form string="FDS PostFinance files" create="false">
                     <div class="oe_title">
                         <label for="name" class="oe_edit_only"/>
                         <h1>
@@ -162,12 +160,10 @@
             <field name="view_mode">tree,form</field>
             <field name="help" type="html">
                 <p class="oe_view_nocontent_create">
-            Select the FDS PostFinance that you want to connect.
-                </p><p>
+            Select the FDS PostFinance that you want to connect.</p><p>
             This view will allow to list all contents of your FDS PostFinance repertory
             and import selected files to Bank Statements. 
-            If your FDS PostFinance don't appear, start by setup an account.
-                </p>
+            If your FDS PostFinance don't appear, start by setup an account.</p>
             </field>
         </record>
 

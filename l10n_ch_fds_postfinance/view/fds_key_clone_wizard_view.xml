@@ -19,7 +19,7 @@
                 <footer>
                     <button string="Copy" name="copy_button"  type="object" class="oe_highlight" states="default" icon="gtk-apply"/>
                     <button string="Cancel" special="cancel" icon="gtk-cancel" states="default" />
-                    <button string="other copy?" name="back_button" type="object" icon="gtk-undo" states="done" />
+                    <button string="Make another copy" name="back_button" type="object" icon="gtk-undo" states="done" />
                     <button string="Close" class="oe_highlightoe_link" special="cancel" icon="gtk-close" states="done" />
                 </footer>
             </form>

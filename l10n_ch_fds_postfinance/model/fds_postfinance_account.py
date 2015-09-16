@@ -40,21 +40,18 @@ class fds_postfinance_account(models.Model):
         required=True
     )
     hostname = fields.Char(
-        string='Hostname SFTP Server',
+        string='SFTP Hostname',
         default='fds.post.ch',
         required=True,
-        help='hostname of your sftp'
     )
-    postfinance_mail = fields.Char(
-        string='Mail PostFinance',
+    postfinance_email = fields.Char(
         default='fds@post.ch',
         required=True,
-        help='mail of fds postfinance'
+        help='E-mail of fds postfinance'
     )
     username = fields.Char(
-        string='Username SFTP Server',
+        string='SFTP Username',
         required=True,
-        help='username of your sftp account'
     )
     company_contact_id = fields.Many2one(
         comodel_name='res.users',
@@ -62,26 +59,24 @@ class fds_postfinance_account(models.Model):
         ondelete='restrict',
         required=True,
         help='user that have create/contact with the fds postfinance account'
-             ', it will be use to send the public key to postfinance'
+             ', it will be used to send the public key to postfinance'
     )
     fds_authentication_keys_ids = fields.One2many(
         comodel_name='fds.authentication.keys',
         inverse_name='fds_account_id',
-        string='fds authentication key in this account',
-        help='user key for sftp connection'
+        string='Authentication keys',
     )
     fds_postfinance_files_ids = fields.One2many(
         comodel_name='fds.postfinance.files',
         inverse_name='fds_account_id',
-        string='fds postfinance content',
+        string='FDS Postfinance files',
         readonly=True,
-        help='downloaded file from sftp'
+        help='downloaded files from sftp'
     )
     fds_PF_files_directory_ids = fields.One2many(
         comodel_name='fds.postfinance.files.directory',
         inverse_name='fds_account_id',
-        string='fds postfinance files directory',
-        help='directory name of sftp FDS postfinnace'
+        string='FDS postfinance directories',
     )
 
     ##################################
@@ -104,7 +99,7 @@ class fds_postfinance_account(models.Model):
         if not key:
             raise exceptions.Warning(_("You don't have key"))
 
-        if not key[0].active_key:
+        if not key[0].key_active:
             raise exceptions.Warning(_('Key not active'))
 
         try:

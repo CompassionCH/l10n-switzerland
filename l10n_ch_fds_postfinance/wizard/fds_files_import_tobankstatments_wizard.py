@@ -40,15 +40,15 @@ class fds_files_import_tobankstatments_wizard(models.TransientModel):
     _name = 'fds.files.import.tobankstatments.wizard'
 
     msg_file_imported = fields.Char(
-        'imported file',
+        'Imported files',
         readonly=True
     )
     msg_import_file_fail = fields.Char(
-        'imported file fail',
+        'File import failures',
         readonly=True
     )
     msg_exist_file = fields.Char(
-        'cancel exist imported file',
+        'Files already existing',
         readonly=True
     )
     state = fields.Selection(
@@ -79,7 +79,7 @@ class fds_files_import_tobankstatments_wizard(models.TransientModel):
             self.state = 'error'
             return self._do_populate_tasks()
 
-        if not key.active_key:
+        if not key.key_active:
             self.state = 'error'
             return self._do_populate_tasks()
 
@@ -149,10 +149,10 @@ class fds_files_import_tobankstatments_wizard(models.TransientModel):
                     # save in the model fds_postfinance_files
                     path = os.path.join(tmp_directory, nameFile)
                     with open(path, "rb") as f:
-                        files = f.read()
+                        file_data = f.read()
                     values = {
                         'fds_account_id': fds_id.id,
-                        'files': base64.b64encode(files),
+                        'data': base64.b64encode(file_data),
                         'filename': nameFile,
                         'directory_id': dir_id}
                     fds_files_ids += fds_files_ids.create(values)

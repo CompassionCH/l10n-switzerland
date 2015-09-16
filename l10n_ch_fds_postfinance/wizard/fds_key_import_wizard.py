@@ -40,11 +40,11 @@ class fds_key_import_wizard(models.TransientModel):
 
     public_key_import_txt = fields.Text(
         string='Public key',
-        help='copy/past your public key'
+        help='copy/paste your public key'
     )
     private_key_import_txt = fields.Text(
         string='Private key',
-        help='copy/past your private key'
+        help='copy/paste your private key'
     )
     public_key_import_file = fields.Binary(
         string='Public key',

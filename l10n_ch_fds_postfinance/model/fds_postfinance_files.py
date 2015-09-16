@@ -37,18 +37,17 @@ class fds_postfinance_files(models.Model):
         string='FDS account',
         ondelete='restrict',
         readonly=True,
-        help='file related to FDS account'
+        help='related FDS account'
     )
-    files = fields.Binary(
+    data = fields.Binary(
         readonly=True,
-        help='the downloaded file'
+        help='the downloaded file data'
     )
     bank_statement_id = fields.Many2one(
         comodel_name='account.bank.statement',
-        string='Bank Statment id',
+        string='Bank Statement',
         ondelete='restrict',
         readonly=True,
-        help='the generate bank statment id'
     )
     filename = fields.Char(
         readonly=True
@@ -58,7 +57,6 @@ class fds_postfinance_files(models.Model):
         string='Directory',
         ondelete='restrict',
         readonly=True,
-        help='location directory of the file'
     )
     journal_id = fields.Many2one(
         comodel_name='account.journal',
@@ -128,7 +126,7 @@ class fds_postfinance_files(models.Model):
         try:
             values = {
                 'journal_id': self.directory_id.journal_id.id,
-                'data_file': self.files}
+                'data_file': self.data}
             bs_imoprt_obj = self.env['account.bank.statement.import']
             bank_wiz_imp = bs_imoprt_obj.create(values)
             bank_wiz_imp.import_file()
@@ -161,7 +159,7 @@ class fds_postfinance_files(models.Model):
 
             :returns None:
         '''
-        self.write({'files': None})
+        self.write({'data': None})
 
     @api.multi
     def _state_done_on(self):

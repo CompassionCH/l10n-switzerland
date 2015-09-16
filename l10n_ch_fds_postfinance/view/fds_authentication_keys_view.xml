@@ -14,7 +14,7 @@
                         <field name="pub_filename" invisible="True"/>
                         <field name="private_key_crypted" filename="ppk_filename"/>
                         <field name="ppk_filename" invisible="True"/>
-                        <field name="active_key"/>
+                        <field name="key_active"/>
                     </group>
                 </form>
             </field>

@@ -71,7 +71,7 @@ class fds_key_clone_wizard(models.TransientModel):
     @api.multi
     def back_button(self):
         ''' go back to copy view.
-            Called by pressing other copy? button.
+            Called by pressing "Make another copy" button.
 
             :returns action: configuration for the next wizard's view
         '''
