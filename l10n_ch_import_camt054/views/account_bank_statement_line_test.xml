@@ -7,7 +7,7 @@
         <field name="inherit_id" ref="account_bank_statement_import_camt_details.statement_line_details" />
         <field name="arch" type="xml">
             <field name="partner_id" position="after">
-                <field name="acctSvcrRef"/>
+                <field name="acct_svcr_ref"/>
             </field>
         </field>
     </record>

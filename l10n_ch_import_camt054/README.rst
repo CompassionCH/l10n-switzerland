@@ -13,17 +13,12 @@ This module allow you to import camt 054 and reconcile all lines in the transfer
     * New function to reconcile automatically all the lines from the transfert account
 
 ** Remarks :**
-To use the function the reconcilion you need to make a cron. To make it you can to in the menu : ```Settings->Automation->Scheduled Actions```
+To use the reconcilion function you need to make a cron. You can do it in the menu : ```Settings->Automation->Scheduled Actions```
 and create a new action. The object needed to reach the new function is : ```account.bank.statement.line``` and the function name is : ```camt054_reconcile```.
 The unique parameter is the transfert account number, for example : ```("1099",)```
 
 Known issues / Roadmap
-======================
-
-V1.0.0: 2017-09-15
-    * Add the possibility to import camt 054
-    * Add check of the NtryRef field
-    * Add a function to reconcile the lines from the transfert account.
+=========================
 
 Contributors
 ------------
