@@ -38,7 +38,7 @@ class customParser(models.AbstractModel):
         if len(details_nodes) == 0:
             yield transaction
             self.add_value_from_node(
-                ns, node, './ns:AcctSvcrRef', transaction, 'acctSvcrRef')
+                ns, node, './ns:AcctSvcrRef', transaction, 'acct_svcr_ref')
             return
         transaction_base = transaction
         for node in details_nodes:
@@ -53,9 +53,9 @@ class customParser(models.AbstractModel):
         found_node = node.xpath('../../ns:AcctSvcrRef', namespaces={'ns': ns})
         if len(found_node) != 0:
             self.add_value_from_node(
-                ns, node, '../../ns:AcctSvcrRef', transaction, 'acctSvcrRef')
+                ns, node, '../../ns:AcctSvcrRef', transaction, 'acct_svcr_ref')
         else:
-            self.add_value_from_node(ns, node, './ns:Refs/ns:AcctSvcrRef', transaction,'acctSvcrRef')
+            self.add_value_from_node(ns, node, './ns:Refs/ns:AcctSvcrRef', transaction,'acct_svcr_ref')
 
     def parse_statement(self, ns, node):
         result = super(customParser, self).parse_statement(ns, node)
