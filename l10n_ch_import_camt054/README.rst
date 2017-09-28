@@ -2,7 +2,7 @@
     :alt: License: AGPL-3
 
 Switzerland camt 054 and transfert account reconcile
-=========================
+====================================================
 
 This module allow you to import camt 054 and reconcile all lines in the transfert account.
 
@@ -18,7 +18,7 @@ and create a new action. The object needed to reach the new function is : ```acc
 The unique parameter is the transfert account number, for example : ```("1099",)```
 
 Known issues / Roadmap
-=========================
+======================
 
 Contributors
 ------------
