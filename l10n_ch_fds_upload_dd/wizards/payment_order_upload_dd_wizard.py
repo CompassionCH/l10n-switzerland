@@ -25,17 +25,17 @@ import os
 from tempfile import mkstemp
 
 import openerp
-from openerp import models, fields, api, exceptions, _
+from odoo import models, fields, api, exceptions, _
+
+_logger = logging.getLogger(__name__)
 
 try:
     import pysftp
 except ImportError:
-    raise ImportError(
+    _logger.debug(
         'This module needs pysftp to connect to the FDS. '
         'Please install pysftp on your system. (sudo pip install pysftp)'
     )
-
-_logger = logging.getLogger(__name__)
 
 
 class PaymentOrderUploadDD(models.TransientModel):
@@ -176,5 +176,5 @@ class PaymentOrderUploadDD(models.TransientModel):
             'filename': self.filename,
             'directory_id': self.fds_directory_id.id,
             'state': 'uploaded'}
-        historical_dd_obj = self.env['fds.postfinance.historical.dd']
+        historical_dd_obj = self.env['fds.dd.upload.history']
         historical_dd_obj.create(values)
