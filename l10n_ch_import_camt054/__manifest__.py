@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+
+# pylint: disable=C8101
 {
     'name': 'CAMT 054 import and reconcile',
     'version': '10.0.1.0.0',

@@ -11,10 +11,10 @@ from lxml import etree
 ch_iban = 'CH15 3881 5158 3845 3843 7'
 
 
-class TestSCT_CH(AccountingTestCase):
+class TestSctCh(AccountingTestCase):
 
     def setUp(self):
-        super(TestSCT_CH, self).setUp()
+        super(TestSctCh, self).setUp()
         Account = self.env['account.account']
         Journal = self.env['account.journal']
         PaymentMode = self.env['account.payment.mode']

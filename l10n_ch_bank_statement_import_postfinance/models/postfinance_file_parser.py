@@ -39,6 +39,12 @@ except ImportError:
 class XMLPFParser(models.AbstractModel):
     """
     Parser for XML Postfinance Statements (can be wrapped in a tar.gz file)
+
+    Documentation:
+    - https://www.postfinance.ch/content/dam/pfch/doc/cust/download/
+        efin_edoc_man_fr.pdf
+    - https://www.postfinance.ch/fr/entreprises/besoins/
+        harmonisation-trafic-paiements/documents.html
     """
     _inherit = 'account.bank.statement.import.camt.parser'
 
@@ -64,51 +70,15 @@ class XMLPFParser(models.AbstractModel):
         super(XMLPFParser, self).parse_transaction_details(
             ns, node, transaction)
 
-    # Copied from bank-statement-import/account_bank_statement_import_camt/
-    # models/parser.py
-    def parse_entry(self, ns, node):
-        """Parse an Ntry node and yield transactions"""
-        transaction = {'name': '/', 'amount': 0}  # fallback defaults
+    def parse_entry(self, ns, node, transaction=None):
+        if transaction is None:
+            transaction = {}
+
         self.add_value_from_node(
-            ns, node, './ns:BkTxCd/ns:Prtry/ns:Cd', transaction,
-            'transfer_type'
-        )
-        self.add_value_from_node(
-            ns, node, './ns:BookgDt/ns:Dt', transaction, 'date')
-        self.add_value_from_node(
-            ns, node, './ns:BookgDt/ns:Dt', transaction, 'execution_date')
-        self.add_value_from_node(
-            ns, node, './ns:ValDt/ns:Dt', transaction, 'value_date')
-        amount = self.parse_amount(ns, node)
-        if amount != 0.0:
-            transaction['amount'] = amount
-        self.add_value_from_node(
-            ns, node, './ns:AddtlNtryInf', transaction, 'name')
-        self.add_value_from_node(
-            ns, node, [
-                './ns:NtryDtls/ns:RmtInf/ns:Strd/ns:CdtrRefInf/ns:Ref',
-                './ns:NtryDtls/ns:Btch/ns:PmtInfId',
-                './ns:NtryDtls/ns:TxDtls/ns:Refs/ns:AcctSvcrRef'
-            ],
-            transaction, 'ref'
+            ns, node, './ns:AcctSvcrRef', transaction, 'acct_svcr_ref'
         )
 
-        # begin of new part
-        self.add_value_from_node(
-            ns, node, './ns:AcctSvcrRef',transaction, 'svcr_ref'
-        )
-        # end of new part
-
-        details_nodes = node.xpath(
-            './ns:NtryDtls/ns:TxDtls', namespaces={'ns': ns})
-        if len(details_nodes) == 0:
-            yield transaction
-            return
-        transaction_base = transaction
-        for node in details_nodes:
-            transaction = transaction_base.copy()
-            self.parse_transaction_details(ns, node, transaction)
-            yield transaction
+        return super(XMLPFParser, self).parse_entry(ns, node, transaction)
 
     def parse_statement(self, ns, node):
         """

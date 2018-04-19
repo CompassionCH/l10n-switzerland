@@ -8,7 +8,7 @@
 #
 ##############################################################################
 
-from odoo import models, fields, api
+from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 
 
@@ -18,64 +18,82 @@ class AccountBankStatement(models.Model):
     can_be_closed = fields.Boolean(string="Can this statement be closed",
                                    default=False)
 
-    POSTFINANCE_ACCOUNT_ID = 212
-    CHECK_IF_IS_CAMT_53 = 'camt.053_'
+    IS_CAMT_52 = 'camt.052_'
+    IS_CAMT_53 = 'camt.053_'
 
     @api.model
     def create(self, vals):
+        params = self.env['ir.config_parameter']
+
+        # this parameter should be set to use camt52
+        postfinance_account_id = int(params.get_param(
+            'l10n-switzerland.postfinance_account_id', 0))
+
+        # Check configuration to prevent having duplicated lines if camt052
+        # are used
+        if self.IS_CAMT_52 in vals['reference'] \
+           and not postfinance_account_id:
+            raise UserError(_('The parameter l10n-switzerland.postfinance_'
+                              'account_id should be set when you parse CAMT'
+                              ' 52.'))
+
         # If this is a PostFinance statement, customize the create() function
-        if vals['journal_id'] == self.POSTFINANCE_ACCOUNT_ID:
+        if postfinance_account_id and \
+                vals['journal_id'] == postfinance_account_id:
             statement = self.search([
                 ('date', '=', vals['date']),
-                ('journal_id', '=', self.POSTFINANCE_ACCOUNT_ID)
+                ('journal_id', '=', postfinance_account_id)
             ])
             # If the statement already exists, we only add missing lines
             if statement:
-                BankStatementLine = self.env['account.bank.statement.line']
-                new_lines_total = 0.0
+                bank_statement_line = self.env['account.bank.statement.line']
+                new_lines_total_amount = 0.0
 
                 for line in vals['line_ids']:
                     record = line[2]
 
                     statement_line = statement.line_ids.search([
-                        ('svcr_ref', '=', record['svcr_ref'])
+                        ('acct_svcr_ref', '=', record['acct_svcr_ref'])
                     ])
 
                     # If the line does not exists, we create it
                     if not statement_line:
                         # Create a statement line
                         record['statement_id'] = statement.id
-                        BankStatementLine.create(record)
+                        bank_statement_line.create(record)
 
-                        new_lines_total += record['amount']
+                        new_lines_total_amount += record['amount']
 
                     # If the line already exists and is a CAMT53, we update
                     # its fields
-                    elif self.CHECK_IF_IS_CAMT_53 in vals['reference']:
+                    elif self.IS_CAMT_53 in vals['reference']:
+                        line_fields_to_update = {
+                            'name': record.get('name', ''),
+                            'note': record.get('note', ''),
+                            'partner_address': record.get(
+                                'partner_address', ''),
+                            'partner_account': record.get(
+                                'partner_account', ''),
+                            'partner_name': record.get('partner_name', ''),
+                            'partner_bic': record.get('partner_bic', '')
+                        }
 
-                        svcr_ref = record.get('acct_svcr_ref', False)
-                        if svcr_ref:
-                            statement_line.acct_svcr_ref = svcr_ref
-                        statement_line.name = record.get('name', '')
-                        statement_line.note = record.get('note', '')
-                        statement_line.partner_address = record.get(
-                            'partner_address', '')
-                        statement_line.partner_account = record.get(
-                            'partner_account', '')
-                        statement_line.partner_name = record.get(
-                            'partner_name', '')
-                        statement_line.partner_bic = record.get(
-                            'partner_bic', '')
+                        acct_svcr_ref = record.get('acct_svcr_ref', False)
+                        if acct_svcr_ref:
+                            line_fields_to_update['acct_svcr_ref'] = \
+                                acct_svcr_ref
 
-                        statement['balance_start'] = vals['balance_start']
-                        statement.can_be_closed = True
+                        statement_line.write(line_fields_to_update)
 
                 # Update balance amounts
-                if self.CHECK_IF_IS_CAMT_53 in vals['reference']:
-                    statement['balance_start'] = vals['balance_start']
-                    statement['balance_end_real'] = vals['balance_end_real']
+                if self.IS_CAMT_53 in vals['reference']:
+                    statement.write({
+                        'balance_start': vals['balance_start'],
+                        'balance_end_real': vals['balance_end_real'],
+                        'can_be_closed': True
+                    })
                 else:
-                    statement['balance_end_real'] += new_lines_total
+                    statement.balance_end_real += new_lines_total_amount
 
                 return statement
             else:
@@ -88,4 +106,4 @@ class AccountBankStatement(models.Model):
         if self.can_be_closed:
             return super(AccountBankStatement, self).button_confirm_bank()
         else:
-            raise UserError('You cannot close an opened statement.')
+            raise UserError(_('You cannot close an opened statement.'))

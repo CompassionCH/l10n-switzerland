@@ -32,6 +32,10 @@ If the statement is not in the same currency that company please ensure that
 both journal and account have the currency (or secondary currency) properly
 set to statement currency.
 
+If you want to parse CAMT052 files, you need to set your PostFinance account
+ID with 'l10n-switzerland.postfinance_account_id = postfinance_account_id' in
+System parameters.
+
 Usage
 =====
 
