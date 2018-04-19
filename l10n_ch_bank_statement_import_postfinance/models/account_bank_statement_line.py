@@ -31,6 +31,7 @@ class AccountBankStatementLine(models.Model):
     )
     datas = fields.Binary(related='related_file.datas')
     file_ref = fields.Char()
+    svcr_ref = fields.Char()
 
     @api.multi
     def get_statement_line_for_reconciliation_widget(self):
