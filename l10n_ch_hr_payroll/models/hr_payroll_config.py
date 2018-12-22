@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2017 Open Net Sàrl
+# Copyright 2017 Open Net Sï¿½rl
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
 import odoo.addons.decimal_precision as dp
@@ -32,7 +32,8 @@ class HrPayrollConfig(models.TransientModel):
         all_equal = False
 
         all_equal = self.search_account_by_rule([
-            ('l10n_ch_hr_payroll.BASIC_CH', 'debit')])
+            ('l10n_ch_hr_payroll.BASIC_CH', 'debit'),
+            ('l10n_ch_hr_payroll.PROVISION_13', 'debit')])
 
         return all_equal
 
@@ -41,6 +42,14 @@ class HrPayrollConfig(models.TransientModel):
         all_equal = False
         all_equal = self.search_account_by_rule([
             ('l10n_ch_hr_payroll.NET_CH', 'credit')])
+
+        return all_equal\
+
+    @api.model
+    def _get_default_provision13(self):
+        all_equal = False
+        all_equal = self.search_account_by_rule([
+            ('l10n_ch_hr_payroll.PROVISION_13', 'credit')])
 
         return all_equal
 
@@ -174,6 +183,18 @@ class HrPayrollConfig(models.TransientModel):
 
     # Accounting
     # general
+
+    yearlySalaries = fields.Integer(
+        string='Number of salaries per year',
+        default=lambda self: self._get_default_configs('yearlySalaries'),
+        required=False)
+
+    provision13 = fields.Many2one(
+        comodel_name='account.account',
+        string='Provision for the 13 Salary',
+        default=_get_default_provision13,
+        required=False)
+
     cc = fields.Many2one(
         comodel_name='account.account',
         string='Counterparty account',
@@ -334,6 +355,7 @@ class HrPayrollConfig(models.TransientModel):
             'ac_limit',
             'fadmin_per',
             'lpp_min',
+            'yearlySalaries',
             'lpp_max',
             'fa_amount_child',
             'fa_amount_student',

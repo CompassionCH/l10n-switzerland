@@ -26,6 +26,10 @@ class HrPayslip(models.Model):
 
     wage_type = fields.Selection(related='contract_id.wage_type')
 
+    pay_13_salary = fields.Boolean(
+        string='Pay the 13th salary this month',
+        help="Pay the provisionned 13th salary")
+
     @api.multi
     def _compute_worked_hours(self):
         for payslip in self:

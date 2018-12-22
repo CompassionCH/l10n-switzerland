@@ -37,8 +37,21 @@ class HrContract(models.Model):
         digits=dp.get_precision('Account'),
         default=100.0)
 
+    provision_13_salary = fields.Float(
+        string='Accumulated 13th salary (Bruto)',
+        compute='_compute_13_salary',
+        digits=dp.get_precision('Account'))
+
     @api.onchange('occupation_rate', 'wage_fulltime')
     def _onchange_wage_rate_fulltime(self):
         for contract in self:
             contract.wage = \
                 contract.wage_fulltime * (contract.occupation_rate / 100)
+
+    def _compute_13_salary(self):
+        for contract in self:
+            move_lines = self.env['account.move.line'].search([
+                ('partner_id', '=', contract.employee_id.address_home_id.id),
+                ('account_id', '=', 172)
+            ])
+            contract.provision_13_salary = sum(move_lines.mapped('credit')) - sum(move_lines.mapped('debit'))

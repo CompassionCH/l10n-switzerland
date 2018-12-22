@@ -10,6 +10,7 @@
                 <field name="wage_type" widget="selection"/>
                 <field name="wage_fulltime" attrs="{'invisible': [('wage_type', '!=', 'month')]}" />
                 <field name="occupation_rate" attrs="{'invisible': [('wage_type', '!=', 'month')]}"/>
+                <field name="provision_13_salary"/>
             </field>
             <field name="struct_id" position="after">
                 <field name="imp_src"/>
