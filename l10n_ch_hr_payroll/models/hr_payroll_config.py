@@ -408,12 +408,17 @@ class HrPayrollConfig(models.TransientModel):
 
             # basic
             config.assign_account_to_rule([
-                'l10n_ch_hr_payroll.BASIC_CH'
-                ], config.basic, 'debit')
+                'l10n_ch_hr_payroll.BASIC_CH',
+                'l10n_ch_hr_payroll.PROVISION_13',
+            ], config.basic, 'debit')
 
             # net
             config.assign_account_to_rule([
                 'l10n_ch_hr_payroll.NET_CH'
+                ], config.net, 'credit')
+            # provision 13
+            config.assign_account_to_rule([
+                'l10n_ch_hr_payroll.PROVISION_13'
                 ], config.net, 'credit')
 
             # avs_d

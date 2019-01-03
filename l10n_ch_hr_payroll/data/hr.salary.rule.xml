@@ -316,13 +316,11 @@ result = (per*(categories.BASIC + categories.ALW))/100
         <field name="amount_python_compute">
 minimum_legal = employee.company_id.lpp_min
 maximum_range = employee.company_id.lpp_max
-amount = contract.wage_fulltime * 12
+amount = contract.wage_fulltime * (contract.occupation_rate / 100)
+amount = amount * (payslip.working_rate / 100)
 if contract.lpp_rate != 0:
     if contract.lpp_contract_id:
-        amount = amount - contract.lpp_contract_id.dc_amount
-    amount = amount / 12
-    amount = amount * (contract.occupation_rate / 100)
-    amount = amount * (payslip.working_rate / 100)
+        amount = amount - contract.lpp_contract_id.dc_amount/12
     if amount &gt; maximum_range:
         result = -(maximum_range)*((contract.lpp_rate)/100)
     elif amount &lt; minimum_legal and not contract.lpp_contract_id:
@@ -349,13 +347,11 @@ else:
         <field name="amount_python_compute">
 minimum_legal = employee.company_id.lpp_min
 maximum_range = employee.company_id.lpp_max
-amount = contract.wage_fulltime * 12
+amount = contract.wage_fulltime * (contract.occupation_rate / 100)
+amount = amount * (payslip.working_rate / 100)
 if contract.lpp_rate != 0:
     if contract.lpp_contract_id:
-        amount = amount - contract.lpp_contract_id.dc_amount
-    amount = amount / 12
-    amount = amount * (contract.occupation_rate / 100)
-    amount = amount * (payslip.working_rate / 100)
+        amount = amount - contract.lpp_contract_id.dc_amount/12
     if amount &gt; maximum_range:
         result = -(maximum_range)*((contract.lpp_rate)/100)
     elif amount &lt; minimum_legal and not contract.lpp_contract_id:
@@ -436,15 +432,15 @@ else:
     <record id="PAY_13" model="hr.salary.rule">
         <field name="appears_on_payslip">True</field>
         <field name="code">PAY_13</field>
-        <field name="condition_select">python</field>
-        <field name="condition_python">result = payslip.pay_13_salary</field>
+        <field name="condition_select">none</field>
         <field name="name">Pay 13th salary provisonned</field>
         <field name="sequence" eval="1"/>
         <field name="amount_select">code</field>
         <field name="amount_python_compute">
-result = contract.provision_13_salary+contract.wage*(employee.company_id.yearlySalaries-12)/12
-
-        </field>
+if payslip.pay_13_salary:
+    result = contract.provision_13_salary+contract.wage*(employee.company_id.yearlySalaries-12)/12
+else:
+    result = 0          </field>
         <field name="category_id" ref="hr_payroll.BASIC"/>
     </record>
     <record id="GROSS_CH" model="hr.salary.rule">
