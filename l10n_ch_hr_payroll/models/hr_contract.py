@@ -49,6 +49,7 @@ class HrContract(models.Model):
                 contract.wage_fulltime * (contract.occupation_rate / 100)
 
     def _compute_13_salary(self):
+        account_id = self.env.ref('hr_payroll.PROVISION_13').account_credit.id
         for contract in self:
             move_lines = self.env['account.move.line'].search([
                 ('partner_id', '=', contract.employee_id.address_home_id.id),
