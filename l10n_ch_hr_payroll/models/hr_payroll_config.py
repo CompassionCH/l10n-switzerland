@@ -47,7 +47,6 @@ class HrPayrollConfig(models.TransientModel):
 
     @api.model
     def _get_default_provision13(self):
-        all_equal = False
         all_equal = self.search_account_by_rule([
             ('l10n_ch_hr_payroll.PROVISION_13', 'credit')])
 
