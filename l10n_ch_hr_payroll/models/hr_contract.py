@@ -52,6 +52,7 @@ class HrContract(models.Model):
         for contract in self:
             move_lines = self.env['account.move.line'].search([
                 ('partner_id', '=', contract.employee_id.address_home_id.id),
-                ('account_id', '=', 172)
+                ('account_id', '=', self.env['account.account'].search(
+                    ['code', '=', '2291']).id)
             ])
             contract.provision_13_salary = sum(move_lines.mapped('credit')) - sum(move_lines.mapped('debit'))
