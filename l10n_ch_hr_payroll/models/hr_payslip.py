@@ -61,10 +61,10 @@ class HrPayslip(models.Model):
     def _compute_13_salary(self):
         for payslip in self:
             if payslip.pay_13_salary:
-                payslip.amount_13_salary = payslip.contract_id.provision_13_salary
+                payslip.amount_13_salary = \
+                    payslip.contract_id.provision_13_salary
             else:
                 payslip.amount_13_salary = 0
-
 
     @api.onchange('employee_id', 'date_from', 'date_to')
     def _onchange_employee_worked_hours(self):
