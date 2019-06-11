@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2017 Open Net Sàrl
+# Copyright 2017 Open Net SÃ rl
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
 import odoo.addons.decimal_precision as dp
@@ -32,23 +32,25 @@ class HrPayrollConfig(models.TransientModel):
         all_equal = False
 
         all_equal = self.search_account_by_rule([
+            ('l10n_ch_hr_payroll.PROVISION_13', 'debit'),
             ('l10n_ch_hr_payroll.BASIC_CH', 'debit')])
 
         return all_equal
 
     @api.model
     def _get_default_net(self):
-        all_equal = False
-        all_equal = self.search_account_by_rule([
+        return self.search_account_by_rule([
             ('l10n_ch_hr_payroll.NET_CH', 'credit')])
 
-        return all_equal
+    @api.model
+    def _get_default_provision13(self):
+        return self.search_account_by_rule([
+            ('l10n_ch_hr_payroll.CLEAR_PROVISION_13', 'debit'),
+            ('l10n_ch_hr_payroll.PROVISION_13', 'credit')])
 
     @api.model
     def _get_default_avs_d(self):
-        all_equal = False
-
-        all_equal = self.search_account_by_rule([
+        return self.search_account_by_rule([
             ('l10n_ch_hr_payroll.AC_C', 'debit'),
             ('l10n_ch_hr_payroll.AC_C_SOL', 'debit'),
             ('l10n_ch_hr_payroll.AC_E', 'debit'),
@@ -60,63 +62,43 @@ class HrPayrollConfig(models.TransientModel):
             ('l10n_ch_hr_payroll.PC_F_VD_E', 'debit'),
             ('l10n_ch_hr_payroll.FADMIN', 'credit')])
 
-        return all_equal
-
     @api.model
     def _get_default_avs_c(self):
-        all_equal = False
-        all_equal = self.search_account_by_rule([
+        return self.search_account_by_rule([
             ('l10n_ch_hr_payroll.AC_C', 'credit'),
             ('l10n_ch_hr_payroll.AC_C_SOL', 'credit'),
             ('l10n_ch_hr_payroll.AVS_C', 'credit'),
             ('l10n_ch_hr_payroll.PC_F_VD_C', 'credit')])
 
-        return all_equal
-
     @api.model
     def _get_default_lpp_d(self):
-        all_equal = False
-        all_equal = self.search_account_by_rule([
+        return self.search_account_by_rule([
             ('l10n_ch_hr_payroll.LPP_C', 'debit'),
             ('l10n_ch_hr_payroll.LPP_E', 'debit')])
 
-        return all_equal
-
     @api.model
     def _get_default_lpp_c(self):
-        all_equal = False
-        all_equal = self.search_account_by_rule([
+        return self.search_account_by_rule([
             ('l10n_ch_hr_payroll.LPP_C', 'credit')])
-
-        return all_equal
 
     @api.model
     def _get_default_laa_c(self):
-        all_equal = False
-        all_equal = self.search_account_by_rule([
+        return self.search_account_by_rule([
             ('l10n_ch_hr_payroll.LAA_C', 'debit'),
             ('l10n_ch_hr_payroll.LAA_E', 'debit'),
             ('l10n_ch_hr_payroll.LCA_C', 'debit'),
             ('l10n_ch_hr_payroll.LCA_E', 'debit')])
 
-        return all_equal
-
     @api.model
     def _get_default_staff_ins(self):
-        all_equal = False
-        all_equal = self.search_account_by_rule([
+        return self.search_account_by_rule([
             ('l10n_ch_hr_payroll.LAA_C', 'credit'),
             ('l10n_ch_hr_payroll.LCA_C', 'credit')])
 
-        return all_equal
-
     @api.model
     def _get_default_other_costs(self):
-        all_equal = False
-        all_equal = self.search_account_by_rule([
+        return self.search_account_by_rule([
             ('l10n_ch_hr_payroll.FADMIN', 'debit')])
-
-        return all_equal
 
     @api.model
     def search_account_by_rule(self, rules_types):
@@ -174,6 +156,18 @@ class HrPayrollConfig(models.TransientModel):
 
     # Accounting
     # general
+
+    yearlySalaries = fields.Integer(
+        string='Number of salaries per year',
+        default=lambda self: self._get_default_configs('yearlySalaries'),
+        required=False)
+
+    provision13 = fields.Many2one(
+        comodel_name='account.account',
+        string='Provision for the 13 Salary',
+        default=_get_default_provision13,
+        required=False)
+
     cc = fields.Many2one(
         comodel_name='account.account',
         string='Counterparty account',
@@ -334,6 +328,7 @@ class HrPayrollConfig(models.TransientModel):
             'ac_limit',
             'fadmin_per',
             'lpp_min',
+            'yearlySalaries',
             'lpp_max',
             'fa_amount_child',
             'fa_amount_student',
@@ -378,6 +373,7 @@ class HrPayrollConfig(models.TransientModel):
                 'l10n_ch_hr_payroll.BASIC_CH',
                 'l10n_ch_hr_payroll.LAA_E',
                 'l10n_ch_hr_payroll.LCA_E',
+                'l10n_ch_hr_payroll.CLEAR_PROVISION_13',
                 'l10n_ch_hr_payroll.LPP_E'
                 ], config.cc, 'credit')
             config.assign_account_to_rule([
@@ -386,13 +382,22 @@ class HrPayrollConfig(models.TransientModel):
 
             # basic
             config.assign_account_to_rule([
+                'l10n_ch_hr_payroll.PROVISION_13',
                 'l10n_ch_hr_payroll.BASIC_CH'
-                ], config.basic, 'debit')
+            ], config.basic, 'debit')
 
             # net
             config.assign_account_to_rule([
                 'l10n_ch_hr_payroll.NET_CH'
                 ], config.net, 'credit')
+            # provision 13
+            config.assign_account_to_rule([
+                'l10n_ch_hr_payroll.PROVISION_13'
+                ], config.provision13, 'credit')
+            # clear provision 13
+            config.assign_account_to_rule([
+                'l10n_ch_hr_payroll.CLEAR_PROVISION_13'
+                ], config.provision13, 'debit')
 
             # avs_d
             config.assign_account_to_rule([
@@ -406,6 +411,7 @@ class HrPayrollConfig(models.TransientModel):
                 'l10n_ch_hr_payroll.PC_F_VD_C',
                 'l10n_ch_hr_payroll.PC_F_VD_E'
                 ], config.avs_d, 'debit')
+
             config.assign_account_to_rule([
                 'l10n_ch_hr_payroll.FADMIN'
                 ], config.avs_d, 'credit')

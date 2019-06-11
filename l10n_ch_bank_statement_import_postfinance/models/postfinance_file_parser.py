@@ -36,7 +36,6 @@ except ImportError:
                     'attachments.')
     pil = None
 
-
 class XMLPFParser(models.AbstractModel):
     """
     Parser for XML Postfinance Statements (can be wrapped in a tar.gz file)
