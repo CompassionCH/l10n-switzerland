@@ -21,6 +21,7 @@ from os.path import splitext
 from tarfile import TarFile, TarError
 from cStringIO import StringIO
 from lxml import etree
+from io import BytesIO
 
 from odoo import models
 
@@ -28,11 +29,12 @@ _logger = logging.getLogger(__name__)
 
 
 try:
-    from wand.image import Image
+    from PIL import Image
     wand = True
 except ImportError:
-    _logger.warning('Please install Wand (sudo pip wand) for Postfinance '
-                    'bank statement import supporting tiff attachments.')
+    _logger.warning('Please install Pillow (sudo pip install Pillow) for '
+                    'Postfinance bank statement import supporting tiff '
+                    'attachments.')
     wand = None
 
 
@@ -138,10 +140,13 @@ class XMLPFParser(models.AbstractModel):
                     key = splitext(file_name)[0]
                     img_data = tar_file.extractfile(file_name).read()
                     if file_name.endswith('.tiff'):
+                        # Convert string containing data to tiff image
+                        image = Image.open(BytesIO(img_data))
+
                         # Convert to png for viewing the image in Odoo
-                        with Image(blob=img_data) as img:
-                            img.format = 'png'
-                            img_data = img.make_blob()
+                        with BytesIO() as png_image:
+                            image.save(png_image, format='PNG')
+                            img_data = png_image.getvalue()
                     attachments[key] = img_data.encode('base64')
             return attachments
         except TarError:
