@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<openerp>
-<data>
+<odoo>
     <!-- view of this wizard -->
     <record model="ir.ui.view" id="view_fds_key_import_wizard_form">
         <field name="name">FDS key import wizard view</field>
@@ -39,7 +38,7 @@
                     <button string="Validate" name="confirm_keys_button" type="object" states="generate" />
                     <button string="Cancel" name="cancel_keys_button" type="object" states="generate" />
                     <button string="Close" class="oe_highlightoe_link" special="cancel" states="done" />
-                    <button string="Send to Postfinance" name="send_keys_button" type="object" icon="gtk-go-forward" states="done" />
+                    <button string="Send to Postfinance" name="send_keys_button" type="object" states="done" />
                 </footer>
             </form>
         </field>
@@ -64,5 +63,4 @@
         <field name="object" eval="1" />
     </record>
     -->
-</data>
-</openerp>
+</odoo>

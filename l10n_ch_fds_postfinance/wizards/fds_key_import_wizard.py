@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # © 2015 Compassion CH (Nicolas Tran)
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
@@ -10,13 +9,13 @@ _logger = logging.getLogger(__name__)
 
 
 class FdsKeyImportWizard(models.TransientModel):
-    ''' FDS Postfinance keys import wizard.
+    """ FDS Postfinance keys import wizard.
         The goal is to import existing key in the database.
 
         This wizard is called when we click on import FDS authentication keys
         for one FDS.
         This Class inherit from fds_key_generator_wizard.
-    '''
+    """
     _name = 'fds.key.import.wizard'
     _inherit = 'fds.key.generator.wizard'
 
@@ -42,12 +41,12 @@ class FdsKeyImportWizard(models.TransientModel):
     ##################################
     @api.multi
     def import_keys_button(self):
-        ''' Import public and private key then save in the database.
+        """ Import public and private key then save in the database.
             Called by pressing import button.
 
             :returns action: configuration for the next wizard's view
             :raises Warning: if missing input information
-        '''
+        """
         self.ensure_one()
 
         # check if authentication keys already exist
@@ -72,21 +71,21 @@ class FdsKeyImportWizard(models.TransientModel):
     #          function          #
     ##############################
     @api.multi
-    def _import_key(self, type):
-        ''' private function that convert the keys depending on type,
+    def _import_key(self, key_type):
+        """ private function that convert the keys depending on type,
             crypte and save in the database using inherit function (_savekeys).
 
-            :param str type: type of the import "file" or "text"
+            :param str key_type: type of the import "file" or "text"
             :returns action: configuration for the next wizard's view
-        '''
+        """
         self.ensure_one()
 
         # convert keys
         auth_key_obj = self.env['fds.authentication.keys']
-        if type == 'file':
+        if key_type == 'file':
             pub = base64.b64decode(self.public_key_import_file)
             ppk = base64.b64decode(self.private_key_import_file)
-        elif type == 'text':
+        elif key_type == 'text':
             pub = self.public_key_import_txt
             ppk = self.private_key_import_txt
         else:

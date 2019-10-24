@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # © 2015 Compassion CH (Nicolas Tran)
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
@@ -19,18 +18,18 @@ try:
     SFTP_OK = True
 except ImportError:
     SFTP_OK = False
-    _logger.debug(
+    _logger.error(
         'This module needs pysftp to connect to the FDS. '
         'Please install pysftp on your system. (sudo pip install pysftp)'
     )
 
 
-class FdsFilesImportToBankStatementsWizard(models.TransientModel):
-    ''' This wizard checks and downloads files in FDS Postfinance server
+class FdsFilesImportFromFDSWizard(models.TransientModel):
+    """ This wizard checks and downloads files in FDS Postfinance server
         that were not already downloaded on the database.
         This wizard is called when we choose the update_fds for one FDS.
-    '''
-    _name = 'fds.files.import.tobankstatments.wizard'
+    """
+    _name = 'fds.files.import.from.fds.wizard'
 
     fds_account_id = fields.Many2one(
         'fds.postfinance.account',
@@ -38,22 +37,22 @@ class FdsFilesImportToBankStatementsWizard(models.TransientModel):
         required=True,
         default=lambda self: self._get_fds_account()
     )
-    msg_file_imported = fields.Char(
+    msg_file_imported = fields.Text(
         'Imported files',
         readonly=True,
         default=''
     )
-    msg_import_file_fail = fields.Char(
+    msg_import_file_fail = fields.Text(
         'File import failures',
         readonly=True,
         default=''
     )
-    msg_exist_file = fields.Char(
+    msg_exist_file = fields.Text(
         'Files already existing',
         readonly=True,
         default=''
     )
-    msg_import_file_ignore = fields.Char(
+    msg_import_file_ignore = fields.Text(
         'Files ignored',
         readonly=True,
         default=''
@@ -73,13 +72,13 @@ class FdsFilesImportToBankStatementsWizard(models.TransientModel):
     ##################################
     @api.multi
     def import_button(self):
-        ''' download the file from the sftp where the directories
+        """ download the file from the sftp where the directories
             were selected in the FDS configuration, and if possible import
             to bank Statments.
             Called by pressing import button.
 
             :returns action: configuration for the next wizard's view
-        '''
+        """
         self.ensure_one()
         if not SFTP_OK:
             raise UserError(_("Please install pysftp to use this feature."))
@@ -97,7 +96,7 @@ class FdsFilesImportToBankStatementsWizard(models.TransientModel):
             (tmp_key, tmp_d) = self._create_tmp_file(key.private_key_crypted)
 
             # get name of directory where download
-            dir = fds_id.directory_ids.filtered('allow_download_file')
+            directory = fds_id.directory_ids.filtered('allow_download_file')
 
             # connect sftp
             with pysftp.Connection(
@@ -106,14 +105,17 @@ class FdsFilesImportToBankStatementsWizard(models.TransientModel):
                     private_key=tmp_key.name,
                     private_key_pass=key_pass) as sftp:
 
-                fds_files_ids = self._download_file(sftp, dir, tmp_d, fds_id)
+                fds_files_ids = self._download_file(sftp, directory, tmp_d,
+                                                    fds_id)
 
-            # import to bank statements
-            self._import2bankStatements(fds_files_ids)
+            # process the files (done by the childrens of this module)
+            for file in fds_files_ids:
+                self.process_files(file)
+
             self.state = 'done'
-        except Exception:
+        except Exception as e:
             self.env.cr.rollback()
-            self.env.invalidate_all()
+            self.env.clear()
             self.state = 'errorSFTP'
             _logger.error(traceback.print_exc())
         finally:
@@ -132,6 +134,10 @@ class FdsFilesImportToBankStatementsWizard(models.TransientModel):
     ##############################
     #          function          #
     ##############################
+    def process_files(self, fds_files_ids):
+        # the process of the files if done by the chidrens
+        pass
+
     def _get_fds_account(self):
         # get selected fds_postfinance_account id
         account_obj = self.env['fds.postfinance.account']
@@ -143,7 +149,7 @@ class FdsFilesImportToBankStatementsWizard(models.TransientModel):
 
     @api.multi
     def _download_file(self, sftp, directories, tmp_directory, fds_id):
-        ''' private function that downloads files from the sftp server where
+        """ private function that downloads files from the sftp server where
             the directories were selected in the configuration of FDS.
 
             :param (obj, (str, str), str, record:
@@ -152,7 +158,7 @@ class FdsFilesImportToBankStatementsWizard(models.TransientModel):
                 - tmp directory name
                 - fds account
             :returns recordset: of download files (model fds.postfinance.file)
-        '''
+        """
         fds_files_ids = self.env['fds.postfinance.file']
         for d in directories:
             dir_name = d.name
@@ -160,7 +166,7 @@ class FdsFilesImportToBankStatementsWizard(models.TransientModel):
             with sftp.cd(dir_name):
                 list_name_files = sftp.listdir()
             sftp.get_d(dir_name, tmp_directory)
-            _logger.info("[OK] download files in '%s' ", (dir_name))
+            _logger.info("[OK] download files in '%s' ", dir_name)
 
             # Look for files to exclude
             excluded = d.excluded_files.split(';')
@@ -168,25 +174,30 @@ class FdsFilesImportToBankStatementsWizard(models.TransientModel):
                 file_ignore = [f for f in excluded if f and f in
                                nameFile]
                 if file_ignore:
-                    self.msg_import_file_ignore += "; ".join(
-                        file_ignore)
+                    self.msg_import_file_ignore += "; ".join(file_ignore)
                     continue
 
                 # check if file exist already
                 if fds_files_ids.search([['filename', '=', nameFile]]):
                     self.msg_exist_file += nameFile + "; "
-                    _logger.warning("[FAIL] file '%s' already exist",
-                                    (nameFile))
+                    _logger.warning("[FAIL] file '%s' already exist", nameFile)
                     continue
 
                 # save in the model fds_postfinance_files
                 path = os.path.join(tmp_directory, nameFile)
                 with open(path, "rb") as f:
                     file_data = f.read()
+
+                file_type = False
+                if nameFile.startswith('camt.054'):
+                    file_type = 'camt.054'
+                elif nameFile.startswith('pain.002'):
+                    file_type = 'pain.002.001.03.ch.02'
                 values = {
                     'fds_account_id': fds_id.id,
                     'data': base64.b64encode(file_data),
                     'filename': nameFile,
+                    'file_type': file_type,
                     'directory_id': d.id}
                 fds_files_ids += fds_files_ids.create(values)
                 # Commit the file created to avoid having to import again
@@ -195,21 +206,8 @@ class FdsFilesImportToBankStatementsWizard(models.TransientModel):
         return fds_files_ids
 
     @api.multi
-    def _import2bankStatements(self, fds_files_ids):
-        ''' private function that import the files to bank statments
-
-            :param recordset: of model fds_postfinance_file
-            :returns None:
-        '''
-        fds_files_ids.import2bankStatements()
-        error = fds_files_ids.filtered(lambda r: r.state == 'error')
-        success = fds_files_ids - error
-        self.msg_file_imported += '; '.join(success.mapped('filename'))
-        self.msg_import_file_fail += '; '.join(error.mapped('filename'))
-
-    @api.multi
     def _get_sftp_config(self):
-        ''' private function that get the sftp configuration need for
+        """ private function that get the sftp configuration need for
             connection with the server.
 
             :returns (record, str, str, str, str):
@@ -218,7 +216,7 @@ class FdsFilesImportToBankStatementsWizard(models.TransientModel):
             :returns action: if no key found, return error wizard's view
             :raises Warning:
                 - if many FDS account selected
-        '''
+        """
         # check key of active user
         fds_authentication_key_obj = self.env['fds.authentication.keys']
         key = fds_authentication_key_obj.search([
@@ -230,17 +228,17 @@ class FdsFilesImportToBankStatementsWizard(models.TransientModel):
         username = self.fds_account_id.username
         key_pass = fds_authentication_key_obj.config()
 
-        return (self.fds_account_id, hostname, username, key, key_pass)
+        return self.fds_account_id, hostname, username, key, key_pass
 
     @api.multi
     def _create_tmp_file(self, data, tmp_directory=None):
-        ''' private function that write data to a tmp file and if no tmp
+        """ private function that write data to a tmp file and if no tmp
             directory use, create one.
 
             :param str data: data in base64 format
             :param str tmp_directory: path of the directory
             :returns (obj file, str directory): obj of type tempfile
-        '''
+        """
         self.ensure_one()
         try:
             if not tmp_directory:
@@ -249,16 +247,16 @@ class FdsFilesImportToBankStatementsWizard(models.TransientModel):
             tmp_file = tempfile.NamedTemporaryFile(dir=tmp_directory)
             tmp_file.write(base64.b64decode(data))
             tmp_file.flush()
-            return (tmp_file, tmp_directory)
+            return tmp_file, tmp_directory
         except Exception as e:
             _logger.error("Bad handling tmp in fds_inherit_sepa_wizard: %s", e)
 
     @api.multi
     def _changeMessage(self):
-        ''' private function that change message to none if no message
+        """ private function that change message to none if no message
 
             :returns None:
-        '''
+        """
         if self.msg_exist_file == '':
             self.msg_exist_file = 'none'
         if self.msg_file_imported == '':
@@ -268,10 +266,10 @@ class FdsFilesImportToBankStatementsWizard(models.TransientModel):
 
     @api.multi
     def _do_populate_tasks(self):
-        ''' private function that continue with the same wizard.
+        """ private function that continue with the same wizard.
 
             :returns action: configuration for the next wizard's view
-        '''
+        """
         self.ensure_one()
         action = {
             'type': 'ir.actions.act_window',
@@ -285,9 +283,9 @@ class FdsFilesImportToBankStatementsWizard(models.TransientModel):
 
     @api.multi
     def _close_wizard(self):
-        ''' private function that put action wizard to close.
+        """ private function that put action wizard to close.
 
             :returns action: close the wizard's view
-        '''
+        """
         self.ensure_one()
         return {'type': 'ir.actions.act_window_close'}
