@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 ##############################################################################
 #
 #    Swiss Postfinance File Delivery Services module for Odoo
@@ -22,16 +21,14 @@
 {
     'name': 'Swiss Postfinance FDS SEPA upload',
     'summary': "Upload SEPA files to FDS PostFinance",
-    'version': '10.0.1.0.0',
+    'version': '11.0.1.0.0',
     'license': 'AGPL-3',
     'author': 'Compassion CH, Odoo Community Association (OCA)',
     'website': 'http://www.compassion.ch/',
     'category': 'Finance',
     'depends': [
         'l10n_ch_fds_postfinance',
-        'l10n_ch_pain_credit_transfer',
-        'l10n_ch_import_pain002',
-        'account_payment_order',
+        'l10n_ch_payment_return_sepa'
     ],
     'external_dependencies': {
         'python': ['pysftp']
@@ -46,5 +43,5 @@
     'demo': [],
     'test': [],
     'installable': True,
-    'auto_install': False,
+    'auto_install': True,
 }

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # © 2015 Compassion CH (Nicolas Tran)
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 import base64
@@ -10,9 +9,9 @@ _logger = logging.getLogger(__name__)
 
 
 class FdsPostfinanceFile(models.Model):
-    ''' Model of the information and files downloaded on FDS PostFinance
+    """ Model of the information and files downloaded on FDS PostFinance
         (Keep files in the database)
-    '''
+    """
     _inherit = 'fds.postfinance.file'
 
     payment_order = fields.Many2one(
@@ -22,8 +21,13 @@ class FdsPostfinanceFile(models.Model):
         readonly=True,
     )
 
+    file_type = fields.Selection(selection_add=[
+        ('pain.001.001.03.ch.02',
+         'pain.001.001.03.ch.02 (payment order)')
+    ])
+
     @api.multi
-    def import2bankStatements(self):
+    def import_to_bank_statements(self):
         account_pain002 = self.env['account.pain002.parser']
         pain_files = self.env[self._name]
 
@@ -33,17 +37,17 @@ class FdsPostfinanceFile(models.Model):
 
                 result = account_pain002.parse(decoded_file)
 
-                if result[0]:
-                    if result[1] is not None and result[1].id:
-                        # Link the payment order to the file import.
-                        pf_file.payment_order = result[1].id
-                        # Attach the file to the payment order.
-                        self.env['ir.attachment'].create({
-                            'datas_fname': pf_file.filename,
-                            'res_model': 'account.payment.order',
-                            'datas': pf_file.data,
-                            'name': pf_file.filename,
-                            'res_id': result[1].id})
+                # Link the payment order to the file import.
+                pf_file.payment_order = self.env['account.payment.order'] \
+                    .search([('name', '=', result['order_name'])])
+                if result['transactions']:
+                    # Attach the file to the payment order.
+                    self.env['ir.attachment'].create({
+                        'datas_fname': pf_file.filename,
+                        'res_model': 'account.payment.order',
+                        'datas': pf_file.data,
+                        'name': pf_file.filename,
+                        'res_id': pf_file.payment_order.id})
 
                     pf_file.write({
                         'state': 'done',
@@ -56,11 +60,11 @@ class FdsPostfinanceFile(models.Model):
                     pain_files += pf_file
             except Exception as e:
                 self.env.cr.rollback()
-                self.env.invalidate_all()
+                self.env.clear()
                 if pf_file.state != 'error':
                     pf_file.write({
                         'state': 'error',
-                        'error_message': e.message or e.args and e.args[0]
+                        'error_message': e.args and e.args[0]
                     })
                     # Here we must commit the error message otherwise it
                     # can be unset by a next file producing an error
@@ -70,4 +74,4 @@ class FdsPostfinanceFile(models.Model):
                               (pf_file.filename), exc_info=True)
 
         return super(FdsPostfinanceFile,
-                     self - pain_files).import2bankStatements()
+                     self - pain_files).import_to_bank_statements()

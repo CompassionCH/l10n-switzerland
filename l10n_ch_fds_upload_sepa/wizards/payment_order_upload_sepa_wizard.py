@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # © 2015-2017 Compassion CH (Nicolas Tran, Emanuel Cino)
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 from tempfile import mkstemp
@@ -38,7 +37,8 @@ class PaymenOrderUploadSepaWizard(models.TransientModel):
     fds_directory_id = fields.Many2one(
         'fds.postfinance.directory', 'FDS Directory',
         help='Select one upload directory. Be sure to have at least one '
-             'directory configured with upload access rights.'
+             'directory configured with upload access rights.',
+        default=lambda self: self._get_default_file_type()
     )
     attachment_id = fields.Many2one(
         'ir.attachment', required=True, ondelete='cascade'
@@ -63,14 +63,14 @@ class PaymenOrderUploadSepaWizard(models.TransientModel):
     ##################################
     @api.multi
     def upload_generate_file_button(self):
-        ''' upload pain_001 file to the FDS Postfinance by sftp
+        """ upload pain_001 file to the FDS Postfinance by sftp
 
             :returns action: configuration for the next wizard's view
             :raises Warning:
                 - If no fds account and directory selected
                 - if current user do not have key
                 - if unable to connect to sftp
-        '''
+        """
         self.ensure_one()
         if not SFTP_OK:
             raise exceptions.Warning(
@@ -120,6 +120,16 @@ class PaymenOrderUploadSepaWizard(models.TransientModel):
     ##############################
     #          function          #
     ##############################
+    @api.model
+    def _get_default_file_type(self):
+        # if multiple fds_file_type --> prod + test --> we select test
+        fds_file_type = self.env['fds.postfinance.directory'].search([
+            ('file_type', '=', 'pain.001.001.03.ch.02')],
+            order='name desc',
+            limit=1
+        )
+        return fds_file_type
+
     def _get_default_account(self):
         """ Select one account if only one exists. """
         fds_accounts = self.env['fds.postfinance.account'].search([])
@@ -140,12 +150,12 @@ class PaymenOrderUploadSepaWizard(models.TransientModel):
 
     @api.multi
     def _get_sftp_key(self):
-        ''' private function that get the SFTP key needed for connection
+        """ private function that get the SFTP key needed for connection
             with the server.
 
             :returns (str key, str key_pass):
             :riases Warning: if no key found
-        '''
+        """
         fds_authentication_key_obj = self.env['fds.authentication.keys']
         key = fds_authentication_key_obj.search([
             ['user_id', '=', self.env.user.id],
@@ -162,10 +172,10 @@ class PaymenOrderUploadSepaWizard(models.TransientModel):
 
     @api.multi
     def _add2historical(self):
-        ''' private function that add the upload file to historic
+        """ private function that add the upload file to historic
 
             :returns: None
-        '''
+        """
         self.ensure_one()
         values = {
             'payment_order_id': self.payment_order_id.id,
