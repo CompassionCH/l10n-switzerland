@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 ##############################################################################
 #
 #    Swiss Postfinance File Delivery Services module for Odoo
@@ -19,13 +20,13 @@
 #
 ##############################################################################
 
-from odoo import models, fields
+from openerp import models, fields
 
 
-class FdsDdUploadHistory(models.Model):
-    """ History of direct debit uploads to FDS
-    """
-    _name = 'fds.dd.upload.history'
+class FdsSepaUploadHistory(models.Model):
+    ''' History of SEPA FDS uploads
+    '''
+    _name = 'fds.sepa.upload.history'
 
     fds_account_id = fields.Many2one(
         comodel_name='fds.postfinance.account',
@@ -34,7 +35,7 @@ class FdsDdUploadHistory(models.Model):
         readonly=True,
     )
     payment_order_id = fields.Many2one(
-        comodel_name='account.payment.order',
+        comodel_name='payment.order',
         string='Payment order',
         ondelete='restrict',
         readonly=True,

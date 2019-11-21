@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 ##############################################################################
 #
 #    Swiss Postfinance File Delivery Services module for Odoo
@@ -54,7 +53,8 @@ class PaymentOrderUploadDD(models.TransientModel):
         comodel_name='fds.postfinance.directory',
         string='FDS directory',
         help='Select one upload directory. Be sure to have at least one '
-             'directory configured with upload access rights.'
+             'directory configured with upload access rights.',
+        default=lambda self: self._get_default_file_type()
     )
     attachment_id = fields.Many2one(
         'ir.attachment', required=True, ondelete='cascade'
@@ -82,14 +82,14 @@ class PaymentOrderUploadDD(models.TransientModel):
     ##################################
     @api.multi
     def send_export_button(self):
-        ''' Upload pain_001 file to the FDS Postfinance by SFTP
+        """ Upload pain_001 file to the FDS Postfinance by SFTP
 
             :returns action: configuration for wizard's next view
             :raises Warning:
                 - If no FDS account and directory selected
                 - If current user do not have key
                 - If connection to SFTP fails
-        '''
+        """
         self.ensure_one()
 
         # check key of active user
@@ -145,6 +145,16 @@ class PaymentOrderUploadDD(models.TransientModel):
     ##############################
     #          function          #
     ##############################
+    @api.model
+    def _get_default_file_type(self):
+        # if multiple fds_file_type --> prod + test --> we select test
+        fds_file_type = self.env['fds.postfinance.directory'].search([
+            ('file_type', '=', 'pain.008.001.02.ch.03')],
+            order='name desc',
+            limit=1
+        )
+        return fds_file_type
+
     def _get_default_account(self):
         """ Select one account if only one exists. """
         fds_accounts = self.env['fds.postfinance.account'].search([])
@@ -165,10 +175,10 @@ class PaymentOrderUploadDD(models.TransientModel):
 
     @api.multi
     def _add2historical(self):
-        ''' private function that add the upload file to historic
+        """ private function that add the upload file to historic
 
             :returns: None
-        '''
+        """
         self.ensure_one()
         values = {
             'payment_order_id': self.payment_order_id.id,

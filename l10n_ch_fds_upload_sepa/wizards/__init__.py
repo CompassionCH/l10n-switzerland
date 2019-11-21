@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 ##############################################################################
 #
 #    Swiss Postfinance File Delivery Services module for Odoo
@@ -19,5 +20,4 @@
 #
 ##############################################################################
 
-from . import models
-from . import wizards
+from . import fds_inherit_sepa_wizard
