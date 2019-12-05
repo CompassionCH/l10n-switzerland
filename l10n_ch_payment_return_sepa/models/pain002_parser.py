@@ -57,29 +57,49 @@ class Pain002Parser(models.AbstractModel, PainParser):
         if root_0_0 != 'GrpHdr':
             raise ValueError('expected GrpHdr, got: ' + root_0_0)
 
-    def parse(self, data):
+    def parse(self, payment_return):
         """Parse a pain.002.001.03 file."""
         try:
-            root = etree.fromstring(data, parser=etree.XMLParser(recover=True))
+            root = etree.fromstring(payment_return,
+                                    parser=etree.XMLParser(recover=True))
         except etree.XMLSyntaxError:
             # ABNAmro is known to mix up encodings
-            root = etree.fromstring(data.decode('iso-8859-15').encode('utf-8'))
+            root = etree.fromstring(
+                payment_return.decode('iso-8859-15').encode('utf-8'))
         if root is None:
             raise ValueError(
                 'Not a valid xml file, or not an xml file at all.')
         ns = root.tag[1:root.tag.index("}")]
         self.check_version(ns, root)
+        payment_returns = []
         for node in root:
-            data = super().parse_payment_return(ns, node)
+            payment_return = super().parse_payment_return(ns, node)
+
+            if not payment_return['transactions']:
+                self.add_value_from_node(
+                    ns, node,
+                    './ns:OrgnlGrpInfAndSts/ns:StsRsnInf/ns:Rsn/ns:Cd',
+                    payment_return,
+                    'error_code'
+                )
+                self.add_value_from_node(
+                    ns, node,
+                    './ns:OrgnlGrpInfAndSts/ns:StsRsnInf/ns:AddtlInf',
+                    payment_return,
+                    'error'
+                )
 
             self.add_value_from_node(ns, node,
                                      './ns:OrgnlGrpInfAndSts/ns:OrgnlMsgId',
-                                     data, 'order_name')
+                                     payment_return, 'order_name')
 
-            if 'account_number' not in data:
+            if 'account_number' not in payment_return:
                 payment_order = self.env['account.payment.order'] \
-                    .search([('name', '=', data['order_name'])])
-                data['account_number'] = payment_order \
+                    .search([('name', '=', payment_return['order_name'])])
+                payment_return['account_number'] = payment_order \
                     .company_partner_bank_id.acc_number
 
-            return data
+            # if len(payment_return['transactions']):
+            payment_returns.append(payment_return)
+
+        return payment_returns

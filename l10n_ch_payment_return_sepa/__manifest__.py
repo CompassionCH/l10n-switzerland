@@ -1,7 +1,7 @@
 # © 2017-2018 Compassion CH (Marco Monzione)
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 {
-    'name': 'Import pain002',
+    'name': 'Import payment return',
     'version': '11.0.1.0.0',
     'license': 'AGPL-3',
     'author': 'Compassion CH, Odoo Community Association (OCA)',
@@ -10,6 +10,7 @@
     'depends': [
         'account_payment_order',  # OCA/bank-payment
         'account_payment_return_import_sepa_pain',  # OCA/account-payment
+        'l10n_ch_fds_postfinance',
         'l10n_ch_pain_direct_debit',
         'l10n_ch_pain_credit_transfer'
     ],
