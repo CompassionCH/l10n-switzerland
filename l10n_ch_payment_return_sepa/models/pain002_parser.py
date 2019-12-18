@@ -1,6 +1,7 @@
 import re
 
 from lxml import etree
+
 from odoo import models
 from odoo.addons.account_payment_return_import_sepa_pain.wizard.pain_parser \
     import PainParser
@@ -93,13 +94,28 @@ class Pain002Parser(models.AbstractModel, PainParser):
                                      './ns:OrgnlGrpInfAndSts/ns:OrgnlMsgId',
                                      payment_return, 'order_name')
 
+            payment_order = self.env['account.payment.order'] \
+                .search([('name', '=', payment_return['order_name'])])
             if 'account_number' not in payment_return:
-                payment_order = self.env['account.payment.order'] \
-                    .search([('name', '=', payment_return['order_name'])])
                 payment_return['account_number'] = payment_order \
                     .company_partner_bank_id.acc_number
 
-            # if len(payment_return['transactions']):
+            if payment_order.payment_mode_id.offsetting_account \
+                    == 'transfer_account':
+                if payment_order.payment_type == 'inbound':
+                    payment_return['journal_id'] = self.env[
+                        'account.journal'] \
+                        .search([('default_credit_account_id.id', '=',
+                                  payment_order.payment_mode_id
+                                  .transfer_account_id.id)]).id
+                elif payment_order.payment_type == 'outbound':
+                    payment_return['journal_id'] = self.env['account.journal']\
+                        .search([('default_debit_account_id.id', '=',
+                                  payment_order.payment_mode_id
+                                  .transfer_account_id.id)]).id
+            else:
+                payment_return['journal_id'] = payment_order.journal_id.id
+
             payment_returns.append(payment_return)
 
         return payment_returns
