@@ -16,6 +16,7 @@
     ],
     'demo': [
         'demo/demo.yml'
+        # 'demo/demo.xml'
     ],
     'installable': True,
     'auto_install': True,
