@@ -5,7 +5,7 @@ import logging
 import base64
 
 from odoo import api, models, _
-from odoo.exceptions import Warning as UserWarning
+from odoo.exceptions import Warning
 from ..models.errors import NoPaymentReturnError, NoTransactionsError, \
     ErrorOccurred
 
@@ -81,7 +81,7 @@ class PaymentReturnImport(models.TransientModel):
             notifications.extend(new_notifications)
             order_name = payret_vals['order_name']
         if not payment_returns:
-            raise UserWarning(_('You have already imported this file.'))
+            raise Warning(_('You have already imported this file.'))
         return payment_returns, notifications, order_name
 
     @api.model
