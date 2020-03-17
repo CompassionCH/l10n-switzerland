@@ -9,7 +9,7 @@
     'category': 'Banking addons',
     'depends': [
         'account_payment_order',  # OCA/bank-payment
-        'account_payment_return_import_sepa_pain',  # OCA/account-payment
+        'account_payment_return_import_iso20022',  # OCA/account-payment
         'l10n_ch_fds_postfinance',
         'l10n_ch_pain_direct_debit',
         'l10n_ch_pain_credit_transfer'
