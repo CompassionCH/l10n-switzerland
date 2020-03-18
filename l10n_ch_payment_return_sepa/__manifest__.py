@@ -14,10 +14,7 @@
         'l10n_ch_pain_direct_debit',
         'l10n_ch_pain_credit_transfer'
     ],
-    'demo': [
-        'demo/demo.yml'
-        # 'demo/demo.xml'
-    ],
+    'demo': [],
     'installable': True,
     'auto_install': True,
 }
