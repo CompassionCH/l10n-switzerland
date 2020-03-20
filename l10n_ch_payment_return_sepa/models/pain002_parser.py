@@ -3,7 +3,7 @@ import re
 from lxml import etree
 
 from odoo import models
-from odoo.addons.account_payment_return_import_sepa_pain.wizard.pain_parser \
+from odoo.addons.account_payment_return_import_iso20022.wizard.pain_parser \
     import PainParser
 
 
