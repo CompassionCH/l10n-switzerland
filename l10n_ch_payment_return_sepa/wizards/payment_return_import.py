@@ -85,7 +85,7 @@ class PaymentReturnImport(models.TransientModel):
 
     @api.model
     def _parse_file(self, data_file):
-        """Parse a PAIN.002.001.03 XML file."""§
+        """Parse a PAIN.002.001.03 XML file."""
         try:
             _logger.debug("Try parsing with Direct Debit Unpaid Report.")
             return self.env['account.pain002.parser'].parse(data_file)
