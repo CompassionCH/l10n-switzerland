@@ -4,6 +4,7 @@
 from odoo import models, fields, api
 import logging
 from odoo.exceptions import Warning as UserError
+from odoo.addons.l10n_ch_payment_return_sepa.models.errors import NoStatementsError
 
 _logger = logging.getLogger(__name__)
 
@@ -56,6 +57,12 @@ class FdsPostfinanceFile(models.Model):
             # wrong parser used, raise the error to the parent so it's not
             # catch by the following except Exception
             raise e
+        except NoStatementsError as e:
+            _logger.info(e.name, self.filename)
+            self.write({
+                'state': 'done',
+                'error_message': e.name or e.args and e.args[0]
+            })
         except Exception as e:
             self.env.cr.rollback()
             self.invalidate_cache()
