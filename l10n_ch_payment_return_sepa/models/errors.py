@@ -8,12 +8,6 @@ class NoTransactionsError(except_orm):
         self.object = obj
 
 
-class NoStatementsError(except_orm):
-    def __init__(self, message):
-        self.name = message
-        self.message = message
-
-
 class NoPaymentReturnError(except_orm):
     def __init__(self, message):
         self.name = message

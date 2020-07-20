@@ -1,10 +1,9 @@
 # © 2015 Compassion CH (Nicolas Tran)
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
-from odoo import models, fields, api
+from odoo import models, fields, api, _
 import logging
 from odoo.exceptions import Warning as UserError
-from odoo.addons.l10n_ch_payment_return_sepa.models.errors import NoStatementsError
 
 _logger = logging.getLogger(__name__)
 
@@ -56,13 +55,14 @@ class FdsPostfinanceFile(models.Model):
         except UserError as e:
             # wrong parser used, raise the error to the parent so it's not
             # catch by the following except Exception
-            raise e
-        except NoStatementsError as e:
-            _logger.info(e.name, self.filename)
-            self.write({
-                'state': 'done',
-                'error_message': e.name or e.args and e.args[0]
-            })
+            if e.name == _('This file doesn\'t contain any statement.'):
+                _logger.info(e.name, self.filename)
+                self.write({
+                    'state': 'done',
+                    'error_message': e.name or e.args and e.args[0]
+                })
+            else:
+                raise e
         except Exception as e:
             self.env.cr.rollback()
             self.invalidate_cache()
