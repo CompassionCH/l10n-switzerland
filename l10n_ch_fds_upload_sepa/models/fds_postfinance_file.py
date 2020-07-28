@@ -61,7 +61,7 @@ class FdsPostfinanceFile(models.Model):
             except ValueError:
                 # wrong parser used, we ignore this line since it will need
                 # to be parsed later on
-                pass
+                continue
             except Exception as e:
                 self.env.cr.rollback()
                 self.env.clear()
