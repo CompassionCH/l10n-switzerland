@@ -8,6 +8,12 @@ from odoo.exceptions import Warning as UserError
 _logger = logging.getLogger(__name__)
 
 
+class NoStatementsError(UserError):
+    def __init__(self, message):
+        self.name = message
+        self.message = message
+
+
 class FdsPostfinanceFile(models.Model):
     _inherit = 'fds.postfinance.file'
 
@@ -52,17 +58,16 @@ class FdsPostfinanceFile(models.Model):
             })
             _logger.info("[OK] import file '%s' to bank Statements",
                          self.filename)
+        except NoStatementsError as e:
+            _logger.info(e.name, self.filename)
+            self.write({
+                'state': 'done',
+                'error_message': e.name or e.args and e.args[0]
+            })
         except UserError as e:
             # wrong parser used, raise the error to the parent so it's not
             # catch by the following except Exception
-            if e.name == _('This file doesn\'t contain any statement.'):
-                _logger.info(e.name, self.filename)
-                self.write({
-                    'state': 'done',
-                    'error_message': e.name or e.args and e.args[0]
-                })
-            else:
-                raise e
+            raise e
         except Exception as e:
             self.env.cr.rollback()
             self.invalidate_cache()
