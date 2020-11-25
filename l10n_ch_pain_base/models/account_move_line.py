@@ -3,7 +3,6 @@
 
 from odoo import models, api
 
-
 class AccountMoveLine(models.Model):
     _inherit = 'account.move.line'
 
@@ -11,8 +10,7 @@ class AccountMoveLine(models.Model):
     def _prepare_payment_line_vals(self, payment_order):
         vals = super()._prepare_payment_line_vals(payment_order)
         if self.invoice_id and self.invoice_id._is_isr_reference():
-            if self.invoice_id.partner_bank_id.sanitized_acc_number[4:6] in ['30', '31'] \
-            and self.invoice_id.partner_bank_id.acc_type == 'iban':
+            if self.invoice_id.partner_bank_id._is_qr_iban():
                 vals['communication_type'] = 'qrr'
             else:
                 vals['local_instrument'] = 'CH01'
