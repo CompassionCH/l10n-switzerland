@@ -20,22 +20,21 @@ msgstr ""
 "X-Generator: Weblate 3.2.2\n"
 
 #. module: l10n_ch_payment_slip
-#: code:addons/l10n_ch_payment_slip/models/invoice.py:212
+#: code:addons/l10n_ch_payment_slip/models/invoice.py:149
 #, fuzzy, python-format
-#| msgid "- The bank account {} used in invoice has no ISR adherent number."
 msgid "- The bank account {} used in invoice has no ISR subscription number."
 msgstr ""
 "- Das in der Rechnung verwendete Zahlungskonto {} hat keine ESR "
 "Teilnehmernummer."
 
 #. module: l10n_ch_payment_slip
-#: code:addons/l10n_ch_payment_slip/models/invoice.py:205
+#: code:addons/l10n_ch_payment_slip/models/invoice.py:142
 #, python-format
 msgid "- The invoice must be confirmed."
 msgstr "- Die Rechnung muss bestätigt werden."
 
 #. module: l10n_ch_payment_slip
-#: code:addons/l10n_ch_payment_slip/models/invoice.py:208
+#: code:addons/l10n_ch_payment_slip/models/invoice.py:145
 #, python-format
 msgid "- The invoice needs a partner bank account."
 msgstr ""
@@ -53,7 +52,6 @@ msgstr ""
 #. module: l10n_ch_payment_slip
 #: model:ir.model.fields,field_description:l10n_ch_payment_slip.field_account_invoice__partner_bank_id
 #, fuzzy
-#| msgid "Bank Accounts"
 msgid "Bank Account"
 msgstr "Bankkonten"
 
@@ -231,20 +229,6 @@ msgid "ISR scan line letter spacing"
 msgstr "ESR Codierzeile Zeichenabstand"
 
 #. module: l10n_ch_payment_slip
-#: model:ir.model.fields,help:l10n_ch_payment_slip.field_account_invoice__l10n_ch_isr_subscription
-msgid ""
-"ISR subscription number identifying your company or your bank  to generate "
-"ISR."
-msgstr ""
-
-#. module: l10n_ch_payment_slip
-#: model:ir.model.fields,help:l10n_ch_payment_slip.field_account_invoice__l10n_ch_isr_subscription_formatted
-msgid ""
-"ISR subscription number your company or your bank, formated with '-' and "
-"without the padding zeros, to generate ISR report."
-msgstr ""
-
-#. module: l10n_ch_payment_slip
 #: model:ir.model.fields,field_description:l10n_ch_payment_slip.field_res_company__isr_add_vert
 #: model:ir.model.fields,field_description:l10n_ch_payment_slip.field_res_config_settings__isr_add_vert
 msgid "ISR vert. position for address (inch)"
@@ -300,16 +284,6 @@ msgid "Journal Item"
 msgstr "Journaleintrag"
 
 #. module: l10n_ch_payment_slip
-#: model:ir.model.fields,field_description:l10n_ch_payment_slip.field_account_invoice__l10n_ch_isr_subscription
-msgid "L10N Ch Isr Subscription"
-msgstr ""
-
-#. module: l10n_ch_payment_slip
-#: model:ir.model.fields,field_description:l10n_ch_payment_slip.field_account_invoice__l10n_ch_isr_subscription_formatted
-msgid "L10N Ch Isr Subscription Formatted"
-msgstr ""
-
-#. module: l10n_ch_payment_slip
 #: model:ir.model.fields,field_description:l10n_ch_payment_slip.field_isr_batch_print_wizard____last_update
 #: model:ir.model.fields,field_description:l10n_ch_payment_slip.field_l10n_ch_payment_slip____last_update
 #: model:ir.model.fields,field_description:l10n_ch_payment_slip.field_report_one_slip_per_page_from_invoice____last_update
@@ -361,7 +335,6 @@ msgstr ""
 #. module: l10n_ch_payment_slip
 #: model:ir.model.fields,field_description:l10n_ch_payment_slip.field_account_invoice__reference
 #, fuzzy
-#| msgid "Payment Slip"
 msgid "Payment Ref."
 msgstr "Einzahlungsschein"
 
@@ -422,7 +395,6 @@ msgstr "Einzahlungsscheine drucken"
 #. module: l10n_ch_payment_slip
 #: model:ir.model,name:l10n_ch_payment_slip.model_isr_batch_print_wizard
 #, fuzzy
-#| msgid "Print payment slips"
 msgid "Printing Wizard for payment slip"
 msgstr "Einzahlungsscheine drucken"
 
@@ -444,14 +416,12 @@ msgstr "Zugehöriger Einzahlungsschein"
 #. module: l10n_ch_payment_slip
 #: model:ir.model,name:l10n_ch_payment_slip.model_ir_actions_report
 #, fuzzy
-#| msgid "Report"
 msgid "Report Action"
 msgstr "Bericht"
 
 #. module: l10n_ch_payment_slip
 #: model:ir.model.fields,field_description:l10n_ch_payment_slip.field_ir_actions_report__report_type
 #, fuzzy
-#| msgid "Report"
 msgid "Report Type"
 msgstr "Bericht"
 

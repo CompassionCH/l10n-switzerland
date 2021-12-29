@@ -42,7 +42,7 @@ class AccountInvoice(models.Model):
             # add filtered operator to query
             query_op = ("SELECT id FROM account_invoice "
                         "WHERE REPLACE(reference, ' ', '') %s %%s" %
-                        (operator,))
+                        ({'=like': 'like', '=ilike': 'ilike'}.get(operator, operator),))
             # avoid pylint check on no-sql-injection query_op is safe
             query = query_op
             self.env.cr.execute(query, (value,))
@@ -67,7 +67,7 @@ class AccountInvoice(models.Model):
                           " type, you can set it manually or set appropriate"
                           " payment mode.")
                     )
-                if (bank_acc.acc_type != 'qr-iban'
+                if (not bank_acc._is_qr_iban()
                         and (invoice.currency_id.name == 'CHF'
                              and not bank_acc.l10n_ch_isr_subscription_chf)
                         or (invoice.currency_id.name == 'EUR'
