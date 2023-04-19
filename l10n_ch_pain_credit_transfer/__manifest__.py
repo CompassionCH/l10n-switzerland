@@ -12,6 +12,7 @@
     "depends": [
         "l10n_ch_base_bank",
         "account_banking_sepa_credit_transfer",
+        "l10n_ch_pain_base",
     ],
     "installable": True,
 }
