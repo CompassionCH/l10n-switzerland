@@ -14,7 +14,7 @@
         />
         <field name="arch" type="xml">
             <field name="state" position="before">
-                <button name="show_invoices" string="Show invoices" type="object" />
+                <button name="show_invoices" title="Show invoices" type="object" />
             </field>
         </field>
     </record>
