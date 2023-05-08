@@ -4,17 +4,13 @@
 {
     "name": "Switzerland - PAIN Direct Debit",
     "summary": "Generate ISO 20022 direct debits",
-    "version": "13.0.1.0.0",
+    "version": "14.0.1.0.0",
     "category": "Finance",
     "author": "Akretion,Camptocamp,Compassion,Odoo Community Association(OCA)",
     "website": "https://github.com/OCA/l10n-switzerland",
     "license": "AGPL-3",
     "depends": ["account_banking_sepa_direct_debit", "l10n_ch_pain_base"],
-    "external_dependencies": {
-        "python": [
-            "openupgradelib"
-        ]
-    },
+    "external_dependencies": {"python": ["openupgradelib"]},
     "data": [
         "data/payment_type.xml",
         "data/export_filename_sequence.xml",
