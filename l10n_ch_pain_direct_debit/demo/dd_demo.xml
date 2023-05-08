@@ -8,7 +8,7 @@
         <field name="acc_type">postal</field>
         <field name="acc_number">CH63 0900 0000 2500 9779 8</field>
         <field name="partner_id" ref="base.res_partner_2" />
-        <field name="bank_id" ref="l10n_ch_base_bank.bank_post" />
+        <field name="bank_id" search="[('bic', '=', 'POFICHBEXXX')]" />
     </record>
 
     <record id="post_mandate_xml_dd" model="account.banking.mandate">
@@ -23,15 +23,7 @@
         <field name="acc_type">postal</field>
         <field name="acc_number">CH10 0900 0000 2500 9778 2</field>
         <field name="partner_id" ref="base.main_company" />
-        <field name="bank_id" ref="l10n_ch_base_bank.bank_post" />
-<!--        <field name="company_id" ref="base.main_company"/>-->
-    </record>
-
-    <record id="dd_account_journal_xml_dd" model="account.journal">
-        <field name="name">Bank XML-DD Journal</field>
-        <field name="type">bank</field>
-        <field name="bank_account_id" ref="company_bank_post_xml_dd" />
-<!--        <field name="company_id" ref="base.main_company"/>-->
+        <field name="bank_id" search="[('bic', '=', 'POFICHBEXXX')]" />
     </record>
 
     <record id="dd_account_journal_xml_dd" model="account.journal">
@@ -39,7 +31,6 @@
         <field name="type">bank</field>
         <field name="bank_account_id" ref="company_bank_post_xml_dd" />
         <field name="inbound_payment_method_ids" eval="[(4, ref('export_sepa_dd'))]" />
-<!--        <field name="company_id" ref="base.main_company"/>-->
     </record>
 
     <record id="dd_pay_mode_xml_dd" model="account.payment.mode">

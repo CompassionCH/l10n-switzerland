@@ -82,7 +82,8 @@ class AccountPaymentOrder(models.Model):
         pain_flavor = self.payment_mode_id.payment_method_id.pain_version
         if pain_flavor in ACCEPTED_PAIN_FLAVOURS:
             attrib = {
-                "{http://www.w3.org/2001/XMLSchema-instance}schemaLocation": "http://www.six-interbank-clearing.com/de/%s.xsd  %s.xsd"
+                "{http://www.w3.org/2001/XMLSchema-instance}"
+                "schemaLocation": "http://www.six-interbank-clearing.com/de/%s.xsd  %s.xsd"
                 % (pain_flavor, pain_flavor)
             }
         else:

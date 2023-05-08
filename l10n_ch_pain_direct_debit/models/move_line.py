@@ -19,7 +19,7 @@
 #
 ##############################################################################
 
-from odoo import api, models
+from odoo import models
 
 
 class AccountMoveLine(models.Model):
