@@ -10,7 +10,8 @@ class AccountPaymentMethod(models.Model):
     pain_version = fields.Selection(
         selection_add=[
             ("pain.008.001.02.ch.03", "pain.008.001.02.ch.03 (XML Direct Debit)"),
-        ]
+        ],
+        ondelete={"pain.008.001.02.ch.03": "set null"}
     )
 
     def get_xsd_file_path(self):
