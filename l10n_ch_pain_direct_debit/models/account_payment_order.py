@@ -123,7 +123,6 @@ class AccountPaymentOrder(models.Model):
         category_purpose,
         sequence_type,
         requested_date,
-        sepa,
         eval_ctx,
         gen_args,
     ):
@@ -197,7 +196,6 @@ class AccountPaymentOrder(models.Model):
                 category_purpose,
                 sequence_type,
                 requested_date,
-                sepa,
                 eval_ctx,
                 gen_args,
             )
@@ -428,7 +426,7 @@ class AccountPaymentOrder(models.Model):
 
     @api.model
     def generate_remittance_info_block(self, parent_node, line, gen_args):
-        if line.local_instrument == "LSV+":
+        if line.payment_line_ids[:1].local_instrument == "LSV+":
             remittance_info = etree.SubElement(parent_node, "RmtInf")
             remittance_info_unstructured = etree.SubElement(remittance_info, "Ustrd")
             remittance_info_unstructured.text = self._prepare_field(

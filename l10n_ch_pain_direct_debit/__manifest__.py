@@ -17,7 +17,7 @@
         "views/account_payment_line_view.xml",
         "views/account_payment_mode_view.xml",
         "views/account_payment_order_view.xml",
-        "views/bank_payment_line_view.xml",
+        #"views/bank_payment_line_view.xml",
     ],
     "demo": ["demo/dd_demo.xml"],
     "pre_init_hook": "pre_init_hook",

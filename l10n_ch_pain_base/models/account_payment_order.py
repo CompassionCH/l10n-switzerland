@@ -76,7 +76,7 @@ class AccountPaymentOrder(models.Model):
         self, parent_node, party_type, order, partner_bank, gen_args, bank_line=None
     ):
         if gen_args.get("pain_flavor") == "pain.001.001.03.ch.02" and bank_line:
-            if bank_line.local_instrument == "CH01":
+            if bank_line.payment_line_ids[:1].local_instrument == "CH01":
                 # Don't set the creditor agent on ISR/CH01 payments
                 return True
             elif not partner_bank.bank_bic:
@@ -104,7 +104,7 @@ class AccountPaymentOrder(models.Model):
         if (
             gen_args.get("pain_flavor") == "pain.001.001.03.ch.02"
             and bank_line
-            and bank_line.local_instrument == "CH01"
+            and bank_line.payment_line_ids[:1].local_instrument == "CH01"
         ):
             if not partner_bank.l10n_ch_postal:
                 raise UserError(
@@ -159,7 +159,7 @@ class AccountPaymentOrder(models.Model):
 
     @api.model
     def generate_remittance_info_block(self, parent_node, line, gen_args):
-        if line.communication_type == "qrr":
+        if line.payment_line_ids[:1].communication_type == "qrr":
             remittance_info = etree.SubElement(parent_node, "RmtInf")
             remittance_info_structured = etree.SubElement(remittance_info, "Strd")
             creditor_ref_information = etree.SubElement(
