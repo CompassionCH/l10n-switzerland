@@ -8,7 +8,7 @@
     "development_status": "Beta",
     "license": "AGPL-3",
     "author": "Compassion CH,Odoo Community Association (OCA)",
-    "website": "https://github.com/OCA/bank-payment",
+    "website": "https://github.com/OCA/l10n-switzerland",
     "category": "Banking addons",
     "depends": ["account_payment_export_sftp"],  # OCA/bank-payment
     "data": ["data/edi_data.xml"],
