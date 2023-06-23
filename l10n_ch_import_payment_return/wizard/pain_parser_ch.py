@@ -75,7 +75,7 @@ class PainParserCH(PainParser):
                 )
                 raise ValueError(f"File rejected !\nReason: {info_status[0].text}")
             else:
-                raise ValueError(f"Status not known by Pain Parser CH")
+                raise ValueError("Status not known by Pain Parser CH")
         else:
             raise ValueError("Status Node not found")
 
