@@ -4,6 +4,7 @@
 import base64
 
 from odoo.addons.component.core import Component
+
 from ..wizard.pain_parser_ch import PainParserCH
 
 
