@@ -4,7 +4,7 @@
 import base64
 
 from odoo.addons.component.core import Component
-from odoo.addons.l10n_ch_import_payment_return.wizard.pain_parser_ch import PainParserCH
+from ..wizard.pain_parser_ch import PainParserCH
 
 
 class EDIExchangeProcessPaymentReturn(Component):
