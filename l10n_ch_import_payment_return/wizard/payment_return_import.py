@@ -6,7 +6,6 @@ import logging
 
 from odoo import api, models
 
-
 from .pain_parser_ch import PainParserCH
 
 _logger = logging.getLogger(__name__)
