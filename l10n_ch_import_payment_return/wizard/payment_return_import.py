@@ -15,7 +15,6 @@ _logger = logging.getLogger(__name__)
 class PaymentReturnImport(models.TransientModel):
     _inherit = "payment.return.import"
 
-
     @api.model
     def _parse_single_document(self, data_file):
         """

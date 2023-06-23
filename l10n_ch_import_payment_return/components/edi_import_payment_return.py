@@ -17,9 +17,13 @@ class EDIExchangeProcessPaymentReturn(Component):
 
     def process(self):
         origin_output = self.exchange_record.parent_id
-        payment_order = self.env[origin_output.model].browse(self.exchange_record.parent_id.res_id)
+        payment_order = self.env[origin_output.model].browse(
+            self.exchange_record.parent_id.res_id
+        )
         try:
-            PainParserCH().validate_initial_return(base64.b64decode(self.exchange_record.exchange_file))
+            PainParserCH().validate_initial_return(
+                base64.b64decode(self.exchange_record.exchange_file)
+            )
         except Exception as e:
             payment_order.action_cancel()
             raise e

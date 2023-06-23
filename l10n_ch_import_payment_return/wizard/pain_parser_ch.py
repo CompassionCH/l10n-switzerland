@@ -5,7 +5,9 @@ import re
 import logging
 from lxml import etree
 
-from odoo.addons.account_payment_return_import_iso20022.wizard.pain_parser import PainParser
+from odoo.addons.account_payment_return_import_iso20022.wizard.pain_parser import (
+    PainParser,
+)
 
 _logger = logging.getLogger(__name__)
 
@@ -33,7 +35,9 @@ class PainParserCH(PainParser):
 
     def get_origin_msg(self, file):
         root, ns = self._get_root_ns(file)
-        ORIGIN_MSG_XML_NODE = "./ns:CstmrPmtStsRpt/ns:OrgnlGrpInfAndSts/ns:OrgnlMsgId",
+        ORIGIN_MSG_XML_NODE = (
+            "./ns:CstmrPmtStsRpt/ns:OrgnlGrpInfAndSts/ns:OrgnlMsgId",
+        )
         found_node = root.xpath(ORIGIN_MSG_XML_NODE, namespaces={"ns": ns})
         return found_node[0].text
 
@@ -44,13 +48,11 @@ class PainParserCH(PainParser):
         if not re_pain.search(ns):
             raise ValueError("no pain: " + ns)
         # Check wether version 002.001.03.ch:
-        re_pain_version = re.compile(
-            r"|pain.002.001.03.ch.02.xsd"
-        )
+        re_pain_version = re.compile(r"|pain.002.001.03.ch.02.xsd")
         if not re_pain_version.search(ns):
             raise ValueError("no PAIN.002.001.03: " + ns)
         # Check GrpHdr element:
-        root_0_0 = root[0][0].tag[len(ns) + 2:]  # strip namespace
+        root_0_0 = root[0][0].tag[len(ns) + 2 :]  # strip namespace
         if root_0_0 != "GrpHdr":
             raise ValueError("expected GrpHdr, got: " + root_0_0)
 
@@ -63,10 +65,13 @@ class PainParserCH(PainParser):
             _logger.info(f"File has this status {return_status}")
             if return_status in ACCEPTANCE_STATUS:
                 return True
-            elif return_status == 'PART':
+            elif return_status == "PART":
                 return True
-            elif return_status == 'RJCT':
-                info_status = root.xpath("./ns:CstmrPmtStsRpt/ns:OrgnlGrpInfAndSts/ns:StsRsnInf/ns:AddtlInf", namespaces={"ns": ns})
+            elif return_status == "RJCT":
+                info_status = root.xpath(
+                    "./ns:CstmrPmtStsRpt/ns:OrgnlGrpInfAndSts/ns:StsRsnInf/ns:AddtlInf",
+                    namespaces={"ns": ns},
+                )
                 raise ValueError(f"File rejected !\nReason: {info_status[0].text}")
             else:
                 raise ValueError(f"Status not known by Pain Parser CH")
