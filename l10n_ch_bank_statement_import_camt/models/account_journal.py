@@ -12,7 +12,7 @@ class AccountJournal(models.Model):
         help="Parse the account QR iban field for CAMT54\n"
              "This field can't accept three journals with the same account number."
     )
-
+    
     @api.model
     def _qr_iban_defined_qr_parsing(self):
         for journal in self:
