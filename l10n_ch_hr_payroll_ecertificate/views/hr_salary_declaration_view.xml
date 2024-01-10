@@ -10,7 +10,7 @@
                 <field name="employee_id" />
                 <field name="date_from" />
                 <field name="date_to" />
-                <field name="grossincome" sum="grossincome" />
+                <field name="gross_income" sum="gross_income" />
             </tree>
         </field>
     </record>
