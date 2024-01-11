@@ -20,14 +20,20 @@ Available addons
 ----------------
 addon | version | maintainers | summary
 --- | --- | --- | ---
-[ebill_paynet](ebill_paynet/) | 14.0.1.1.3 | [![TDu](https://github.com/TDu.png?size=30px)](https://github.com/TDu) | Paynet platform bridge implementation
+[ebill_paynet](ebill_paynet/) | 14.0.1.1.4 | [![TDu](https://github.com/TDu.png?size=30px)](https://github.com/TDu) | Paynet platform bridge implementation
 [ebill_paynet_customer_free_ref](ebill_paynet_customer_free_ref/) | 14.0.1.0.2 |  | Glue module: ebill_paynet and sale_order_customer_free_ref
+[ebill_postfinance](ebill_postfinance/) | 14.0.1.1.0 | [![TDu](https://github.com/TDu.png?size=30px)](https://github.com/TDu) | Postfinance eBill integration
+[ebill_postfinance_server_env](ebill_postfinance_server_env/) | 14.0.1.0.0 |  | Server environment for eBill Postfinance
+[ebill_postfinance_stock](ebill_postfinance_stock/) | 14.0.1.0.0 | [![TDu](https://github.com/TDu.png?size=30px)](https://github.com/TDu) | Add stock integration to Postfinance eBill
 [l10n_ch_account_tags](l10n_ch_account_tags/) | 14.0.1.0.0 |  | Switzerland Account Tags
-[l10n_ch_base_bank](l10n_ch_base_bank/) | 14.0.1.0.2 |  | Types and number validation for swiss electronic pmnt. DTA, ESR
+[l10n_ch_base_bank](l10n_ch_base_bank/) | 14.0.1.0.3 |  | Types and number validation for swiss electronic pmnt. DTA, ESR
 [l10n_ch_delivery_carrier_label_quickpac](l10n_ch_delivery_carrier_label_quickpac/) | 14.0.1.0.1 |  | Print quickpac shipping labels
 [l10n_ch_invoice_reports](l10n_ch_invoice_reports/) | 14.0.1.3.0 |  | Extend invoice to add ISR/QR payment slip
 [l10n_ch_isr_payment_grouping](l10n_ch_isr_payment_grouping/) | 14.0.1.0.1 |  | Extend account to ungroup ISR
 [l10n_ch_isrb](l10n_ch_isrb/) | 14.0.1.0.0 |  | Switzerland - ISR with Bank
+[l10n_ch_mis_reports](l10n_ch_mis_reports/) | 14.0.1.0.0 |  | Specific MIS reports for switzerland localization
+[l10n_ch_pain_base](l10n_ch_pain_base/) | 14.0.1.0.0 |  | ISO 20022 base module for Switzerland
+[l10n_ch_pain_credit_transfer](l10n_ch_pain_credit_transfer/) | 14.0.1.0.0 | [![ecino](https://github.com/ecino.png?size=30px)](https://github.com/ecino) | Generate ISO 20022 credit transfert (SEPA and not SEPA)
 [l10n_ch_states](l10n_ch_states/) | 14.0.1.0.0 |  | Switzerland Country States
 [server_env_ebill_paynet](server_env_ebill_paynet/) | 14.0.1.0.0 |  | Server environment for Ebill Paynet
 
