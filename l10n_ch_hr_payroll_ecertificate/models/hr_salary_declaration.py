@@ -25,7 +25,7 @@ class HrSalaryDeclaration(models.Model):
     year = fields.Char()
 
     @api.model
-    def generate_yearly_declaration(self, date_from, date_to,company_car,
+    def generate_yearly_declaration(self, date_from, date_to,company_car,gross_income,deduction,lpp_bvg):
         payslip_lines = self.env["hr.payslip.line"].search(
             [
                 ("slip_id.date_from", ">=", date_from),
