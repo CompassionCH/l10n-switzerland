@@ -11,15 +11,6 @@ ACCEPTED_PAIN_FLAVOURS = ("pain.001.001.03.ch.02", "pain.008.001.02.ch.03")
 class AccountPaymentOrder(models.Model):
     _inherit = "account.payment.order"
 
-    def compute_sepa_final_hook(self, sepa):
-        self.ensure_one()
-        sepa = super().compute_sepa_final_hook(sepa)
-        pain_flavor = self.payment_mode_id.payment_method_id.pain_version
-        # ISR orders cannot be SEPA orders
-        if pain_flavor and ".ch." in pain_flavor:
-            sepa = False
-        return sepa
-
     def generate_pain_nsmap(self):
         self.ensure_one()
         nsmap = super().generate_pain_nsmap()
