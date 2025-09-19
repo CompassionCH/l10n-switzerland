@@ -147,6 +147,13 @@ class EbillPostfinanceService(models.Model):
         res = service.get_registration_protocol(create_date, archive_data)
         return res
 
+    def initiate_ebill_recipient_subscription(self, recipient_email):
+        service = self._get_service()
+        res = service.initiate_ebill_recipient_subscription(recipient_email)
+        return res
+
+
+
     @api.model
     def cron_update_invoices(self):
         services = self.search([])
