@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="subscribe_template" name="E-Bill Subscription">
+        <div id="wrap" class="container">
+            <h1>E-Bill abonnieren</h1>
+            <form action="/ebill/validate" method="post">
+                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                <div class="form-group">
+                    <label for="email">E-Mail-Adresse:</label>
+                    <input type="email" name="email" class="form-control" required="1"/>
+                </div>
+                <button type="submit" class="btn btn-primary">Validierungscode anfordern</button>
+            </form>
+        </div>
+    </template>
+
+    <template id="validate_template" name="E-Bill Validation">
+        <div id="wrap" class="container">
+            <h1>Validierungscode eingeben</h1>
+            <p>Wir haben einen Code an <t t-esc="email"/> gesendet.</p>
+            <form action="/ebill/confirm" method="post">
+                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                <input type="hidden" name="token" t-att-value="token"/>
+                <div class="form-group">
+                    <label for="validation_code">Validierungscode:</label>
+                    <input type="text" name="validation_code" class="form-control" required="1"/>
+                </div>
+                <button type="submit" class="btn btn-primary">Bestätigen</button>
+            </form>
+        </div>
+    </template>
+
+    <template id="success_template" name="E-Bill Subscription Successful">
+        <div id="wrap" class="container">
+            <h1>Vielen Dank!</h1>
+            <p>Sie haben E-Bill erfolgreich abonniert.</p>
+        </div>
+    </template>
+</odoo>
