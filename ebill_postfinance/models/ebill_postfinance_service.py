@@ -152,7 +152,10 @@ class EbillPostfinanceService(models.Model):
         res = service.initiate_ebill_recipient_subscription(recipient_email)
         return res
 
-
+    def confirm_ebill_recipient_subscription(self, initiation_token, activation_code):
+        service = self._get_service()
+        res = service.confirm_ebill_recipient_subscription(initiation_token, activation_code)
+        return res
 
     @api.model
     def cron_update_invoices(self):
