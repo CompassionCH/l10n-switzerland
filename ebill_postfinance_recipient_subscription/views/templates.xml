@@ -3,6 +3,13 @@
     <template id="subscribe_template" name="E-Bill Subscription">
         <div id="wrap" class="container">
             <h1>E-Bill abonnieren</h1>
+
+            <t t-if="error">
+                <div class="alert alert-danger" role="alert">
+                    <t t-esc="error"/>
+                </div>
+            </t>
+
             <form action="/ebill/validate" method="post">
                 <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
                 <div class="form-group">
@@ -21,6 +28,7 @@
             <form action="/ebill/confirm" method="post">
                 <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
                 <input type="hidden" name="token" t-att-value="token"/>
+                <input type="hidden" name="email_from_previous_step" t-att-value="email"/>
                 <div class="form-group">
                     <label for="validation_code">Validierungscode:</label>
                     <input type="text" name="validation_code" class="form-control" required="1"/>

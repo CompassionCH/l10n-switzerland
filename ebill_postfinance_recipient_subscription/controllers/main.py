@@ -31,22 +31,34 @@ class EbillSubscriptionController(http.Controller):
         activation_code = post.get('validation_code')
         ebill_service = request.env['ebill.postfinance.service'].browse(3)
 
-        # API-Aufruf zur Bestätigung
-        partner_data = ebill_service.confirm_ebill_recipient_subscription(token, activation_code)
+        try:
+            partner_data = ebill_service.confirm_ebill_recipient_subscription(
+                token, activation_code
+            )
+        except ValueError as e:
+            print("validation failed", e)
+            # show resend email button
 
-        # Partner in Odoo finden oder erstellen
-        partner = request.env['res.partner'].search([('email', '=', partner_data['EmailAddress'])], limit=1)
-        if not partner:
-            # Erstellen Sie hier eine Logik, um einen neuen Partner zu erstellen, falls gewünscht
-            pass
+        if partner_data and partner_data.get('EbillAccountID'):
+            # 1. Partner in Odoo finden oder erstellen
+            partner_email = partner_data.get('EmailAddress')
+            partner = request.env['res.partner'].sudo().search([('email', '=', partner_email)], limit=1)
+            if not partner:
+                print("partner should be created")
 
-        if partner:
-            # Erstellen des ebill.payment.contract
-            request.env['ebill.payment.contract'].create({
-                'partner_id': partner.id,
-                'ebill_account_id': partner_data['EbillAccountID'],
-                'type': 'private',  # Passen Sie dies bei Bedarf an
-            })
+            # 2. Den korrekten E-Bill-Vertrag erstellen
+            if partner:
+                contract_vals = {
+                    'partner_id': partner.id,
+                    'postfinance_service_id': ebill_service.id,
+                    'ebill_account_id': partner_data.get('EbillAccountID'),
+                    'state': 'open',  # Setzt den Vertrag direkt auf "offen" und damit gültig
+                }
+                # new_contract = request.env['ebill.payment.contract'].sudo().create(contract_vals)
+                print("new contract gets created")
 
-        # Zeigt die Erfolgsseite an
-        return request.render('ebill_postfinance_recipient_subscription.success_template', {})
+            return request.render('ebill_postfinance_recipient_subscription.success_template', {})
+
+
+        return request.render('ebill_postfinance_recipient_subscription.subscribe_template',
+                          {'error': 'Validierung fehlgeschlagen'})
