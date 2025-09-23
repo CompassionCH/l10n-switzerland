@@ -12,7 +12,7 @@
     ],
     'data': [
         'security/ir.model.access.csv',
-        'views/templates.xml',
+        'views/ebill_recipient_subscription_workflow.xml',
     ],
     'installable': True,
 }

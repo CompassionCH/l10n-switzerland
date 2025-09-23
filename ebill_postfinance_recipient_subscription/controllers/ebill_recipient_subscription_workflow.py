@@ -31,6 +31,7 @@ class EbillSubscriptionController(http.Controller):
         activation_code = post.get('validation_code')
         ebill_service = request.env['ebill.postfinance.service'].browse(3)
 
+        partner_data = None
         try:
             partner_data = ebill_service.confirm_ebill_recipient_subscription(
                 token, activation_code
