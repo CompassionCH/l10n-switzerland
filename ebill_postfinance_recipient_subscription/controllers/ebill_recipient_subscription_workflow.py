@@ -6,7 +6,38 @@ class EbillSubscriptionController(http.Controller):
 
     @http.route('/ebill/subscribe', type='http', auth='public', website=True)
     def subscribe(self, **kw):
-        """Zeigt die erste Seite an, auf der der Benutzer seine E-Mail eingeben kann."""
+        """
+        Zeigt die erste Seite an oder startet den Validierungsprozess direkt,
+        wenn eine valide E-Mail als URL-Parameter übergeben wird.
+        Beispiel: /ebill/subscribe?email=test@example.com
+        """
+        email = kw.get('email')
+
+        # Prüfen, ob eine E-Mail als Parameter übergeben wurde
+        if email:
+            try:
+                # Hier könnten Sie eine robustere E-Mail-Validierung hinzufügen
+                if '@' not in email:
+                    raise ValueError("Ungültiges E-Mail-Format.")
+
+                # Die gleiche Logik wie in der 'validate'-Methode ausführen
+                ebill_service = request.env['ebill.postfinance.service'].browse(3)
+                token_sub = ebill_service.initiate_ebill_recipient_subscription(email)
+
+                # Direkt die zweite Seite (Validierungscode-Eingabe) rendern
+                return request.render('ebill_postfinance_recipient_subscription.validate_template', {
+                    'token': token_sub.SubscriptionInitiationToken,
+                    'email': email,
+                })
+            except Exception as e:
+                # Falls ein Fehler auftritt (z.B. API nicht erreichbar),
+                # zeige die Startseite mit einer Fehlermeldung an.
+                return request.render('ebill_postfinance_recipient_subscription.subscribe_template', {
+                    'error': f'Der Prozess konnte nicht gestartet werden: {e}',
+                    'submitted_email': email  # Die E-Mail im Formularfeld vorausfüllen
+                })
+
+        # Standardverhalten: Wenn keine E-Mail übergeben wurde, zeige die normale Startseite an.
         return request.render('ebill_postfinance_recipient_subscription.subscribe_template', {})
 
     @http.route('/ebill/validate', type='http', auth='public', website=True, methods=['POST'])
