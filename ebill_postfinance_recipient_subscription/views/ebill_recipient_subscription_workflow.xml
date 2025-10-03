@@ -14,7 +14,7 @@
                 <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
                 <div class="form-group">
                     <label for="email">E-Mail-Adresse:</label>
-                    <input type="email" name="email" class="form-control" required="1"/>
+                    <input type="email" name="email" class="form-control" required="1" t-att-value="submitted_email"/>
                 </div>
                 <button type="submit" class="btn btn-primary">Validierungscode anfordern</button>
             </form>
