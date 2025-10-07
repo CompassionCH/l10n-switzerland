@@ -67,6 +67,8 @@ class EbillSubscriptionController(http.Controller):
             partner = request.env['res.partner'].sudo().search([('email', '=', partner_email)], limit=1)
             if not partner:
                 print("partner should be created")
+                name = partner_email.split('@')[0]
+                partner = request.env['res.partner'].sudo().create({'name': name, 'email': partner_email})
 
             if partner:
                 contract_vals = {

@@ -1,47 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <template id="subscribe_template" name="E-Bill Subscription">
-        <div id="wrap" class="container">
             <h1>Subscribe to E-Bill</h1>
 
             <t t-if="error">
-                <div class="alert alert-danger" role="alert">
-                    <t t-esc="error"/>
-                </div>
+                <t t-esc="error"/>
             </t>
 
             <form action="/ebill/validate" method="post">
                 <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
-                <div class="form-group">
-                    <label for="email">E-Mail-Adresse:</label>
-                    <input type="email" name="email" class="form-control" required="1" t-att-value="submitted_email"/>
-                </div>
-                <button type="submit" class="btn btn-primary">Request validation code</button>
+                <label>E-Mail-Adresse:</label>
+                <input type="email" name="email" required="1" t-att-value="submitted_email"/>
+                <button type="submit">Request validation code</button>Compassion2024
             </form>
-        </div>
     </template>
 
     <template id="validate_template" name="E-Bill Validation">
-        <div id="wrap" class="container">
             <h1>Enter your validation code</h1>
             <p>We have sent a validation code to <t t-esc="email"/>.</p>
             <form action="/ebill/confirm" method="post">
                 <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
                 <input type="hidden" name="token" t-att-value="token"/>
                 <input type="hidden" name="email_from_previous_step" t-att-value="email"/>
-                <div class="form-group">
-                    <label for="validation_code">Validation code:</label>
-                    <input type="text" name="validation_code" class="form-control" required="1"/>
-                </div>
+                <label>Validation code:</label>
+                <input type="text" name="validation_code" required="1"/>
                 <button type="submit" class="btn btn-primary">Confirm</button>
             </form>
-        </div>
     </template>
 
     <template id="success_template" name="E-Bill Subscription Successful">
-        <div id="wrap" class="container">
-            <h1>Thank you!</h1>
-            <p>You have successfully subscribed to E-Bill.</p>
-        </div>
+        <h1>Thank you!</h1>
+        <p>You have successfully subscribed to E-Bill.</p>
     </template>
 </odoo>
