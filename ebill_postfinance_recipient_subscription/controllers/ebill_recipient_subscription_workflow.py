@@ -103,5 +103,4 @@ class EbillSubscriptionController(http.Controller):
         except Exception as e:
 
             _logger.error(f"Error during the eBill confirmation process for token '{token}' and activation code '{activation_code}'.", exc_info=True)
-            return request.render('ebill_postfinance_recipient_subscription.subscribe_template',
-                          {'error': 'Validierung fehlgeschlagen'})
+            return request.render('ebill_postfinance_recipient_subscription.retry_template')

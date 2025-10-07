@@ -32,4 +32,11 @@
         <h1>Thank you!</h1>
         <p>You have successfully subscribed to E-Bill.</p>
     </template>
+
+    <template id="retry_template" name="E-Bill Subscription Failed">
+        <h1>Unfortunately, something went wrong.</h1>
+        <p>A technical error occurred. Please try the process again.</p>
+        <a href="/ebill/subscribe" >Retry</a>
+    </template>
+
 </odoo>
