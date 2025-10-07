@@ -135,6 +135,12 @@ class EbillPostfinanceService(models.Model):
         res = service.get_ebill_recipient_subscription_status(recipient_id)
         return res
 
+    def get_ebill_recipient_subscription_status_bulk(self, bill_recipient_id):
+        service = self._get_service()
+        res = service.get_ebill_recipient_subscription_status_bulk(bill_recipient_id)
+        return res
+
+
     def get_registration_protocol_list(self, archive_data=False):
         service = self._get_service()
         res = service.get_registration_protocol_list(archive_data)

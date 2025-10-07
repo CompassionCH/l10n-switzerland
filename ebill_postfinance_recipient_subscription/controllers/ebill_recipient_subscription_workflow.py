@@ -12,6 +12,14 @@ class EbillSubscriptionController(http.Controller):
     def _get_ebill_service(self):
         return request.env['ebill.postfinance.service'].sudo().browse(3)
 
+#website true hier nötig?
+    @http.route('/ebill/bulk/search', type='http', auth='public', website=True, methods=['POST'])
+    def subscribe(self, **kw):
+        bill_recipient_id = ['elias.keller@gmail.com']
+
+        ebill_service = self._get_ebill_service()
+        token_sub = ebill_service.get_ebill_recipient_subscription_status_bulk(bill_recipient_id)
+
     @http.route('/ebill/subscribe', type='http', auth='public', website=True)
     def subscribe(self, **kw):
         email = kw.get('email')
