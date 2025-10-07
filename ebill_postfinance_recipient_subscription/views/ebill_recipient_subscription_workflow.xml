@@ -11,21 +11,32 @@
                 <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
                 <label>E-Mail-Adresse:</label>
                 <input type="email" name="email" required="1" t-att-value="submitted_email"/>
-                <button type="submit">Request validation code</button>Compassion2024
+                <button type="submit">Request validation code</button>
             </form>
     </template>
 
     <template id="validate_template" name="E-Bill Validation">
-            <h1>Enter your validation code</h1>
-            <p>We have sent a validation code to <t t-esc="email"/>.</p>
-            <form action="/ebill/confirm" method="post">
-                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
-                <input type="hidden" name="token" t-att-value="token"/>
-                <input type="hidden" name="email_from_previous_step" t-att-value="email"/>
-                <label>Validation code:</label>
-                <input type="text" name="validation_code" required="1"/>
-                <button type="submit" class="btn btn-primary">Confirm</button>
-            </form>
+        <h1>Enter your validation code</h1>
+        <p>We have sent a validation code to <t t-esc="email"/>.</p>
+        <p t-if="error" role="alert">
+            <t t-esc="error"/>
+        </p>
+
+        <form action="/ebill/confirm" method="post">
+            <input type="hidden" name="token" t-att-value="token"/>
+            <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+            <input type="hidden" name="email" t-att-value="email"/>
+            <label>Validation code:</label>
+            <input type="text" name="validation_code" required="1"/>
+            <button type="submit">Confirm</button>
+        </form>
+
+        <form t-if="error" action="/ebill/validate" method="post">
+            <input type="hidden" name="token" t-att-value="token"/>
+            <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+            <input type="hidden" name="email" t-att-value="email"/>
+            <button type="submit">Resend validation code</button>
+        </form>
     </template>
 
     <template id="success_template" name="E-Bill Subscription Successful">
@@ -36,7 +47,7 @@
     <template id="retry_template" name="E-Bill Subscription Failed">
         <h1>Unfortunately, something went wrong.</h1>
         <p>A technical error occurred. Please try the process again.</p>
-        <a href="/ebill/subscribe" >Retry</a>
+        <a href="/ebill/subscribe" type="submit">Retry</a>
     </template>
 
 </odoo>
