@@ -20,7 +20,7 @@ class EbillSubscriptionController(http.Controller):
         ebill_service = self._get_ebill_service()
         token_sub = ebill_service.get_ebill_recipient_subscription_status_bulk(bill_recipient_id)
 
-    @http.route('/ebill/subscribe', type='http', auth='public', website=True)
+    @http.route('/ebill/subscribe', type='http', auth='public', website=True, sitemap=False)
     def subscribe(self, **kw):
         email = kw.get('email')
 
@@ -47,7 +47,7 @@ class EbillSubscriptionController(http.Controller):
 
         return request.render('ebill_postfinance_recipient_subscription.subscribe_template', {})
 
-    @http.route('/ebill/validate', type='http', auth='public', website=True, methods=['POST'])
+    @http.route('/ebill/validate', type='http', auth='public', website=True, methods=['POST'], sitemap=False)
     def validate(self, **post):
         email = post.get('email')
         try:
@@ -63,7 +63,7 @@ class EbillSubscriptionController(http.Controller):
             return request.render('ebill_postfinance_recipient_subscription.retry_template')
 
 #index = flase
-    @http.route('/ebill/confirm', type='http', auth='public', website=True, methods=['POST'])
+    @http.route('/ebill/confirm', type='http', auth='public', website=True, methods=['POST'], sitemap=False)
     def confirm(self, **post):
         token = post.get('token')
         activation_code = post.get('validation_code')
