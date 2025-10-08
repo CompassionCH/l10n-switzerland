@@ -10,7 +10,8 @@ class EbillSubscriptionController(http.Controller):
 
 
     def _get_ebill_service(self):
-        return request.env['ebill.postfinance.service'].sudo().browse(31)
+        biller_id = request.env['ir.config_parameter'].sudo().get_param('ebill_postfinance.biller_id')
+        return request.env['ebill.postfinance.service'].sudo().search([('biller_id', '=', biller_id)], limit=1)
 
     @http.route('/ebill/bulk/search', type='json', auth='public', methods=['POST'])
     def subscribe(self, **kw):

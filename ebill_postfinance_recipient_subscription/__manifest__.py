@@ -9,8 +9,10 @@
     'depends': [
         'ebill_postfinance',
         'website',
+        'base'
     ],
     'data': [
+        'data/ir_config_parameter_data.xml',
         'security/ir.model.access.csv',
         'views/ebill_recipient_subscription_workflow.xml',
     ],
