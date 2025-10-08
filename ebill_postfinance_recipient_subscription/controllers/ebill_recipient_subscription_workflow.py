@@ -12,8 +12,7 @@ class EbillSubscriptionController(http.Controller):
     def _get_ebill_service(self):
         return request.env['ebill.postfinance.service'].sudo().browse(3)
 
-#website true hier nötig?
-    @http.route('/ebill/bulk/search', type='http', auth='public', website=True, methods=['POST'])
+    @http.route('/ebill/bulk/search', type='json', auth='public', methods=['POST'])
     def subscribe(self, **kw):
         bill_recipient_id = ['elias.keller@gmail.com']
 
@@ -62,6 +61,7 @@ class EbillSubscriptionController(http.Controller):
             _logger.error(f"Error during the eBill confirmation process for mail '{email}': {e}", exc_info=True)
             return request.render('ebill_postfinance_recipient_subscription.retry_template')
 
+#index = flase
     @http.route('/ebill/confirm', type='http', auth='public', website=True, methods=['POST'])
     def confirm(self, **post):
         token = post.get('token')
