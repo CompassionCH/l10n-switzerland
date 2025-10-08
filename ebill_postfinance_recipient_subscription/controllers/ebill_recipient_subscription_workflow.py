@@ -1,7 +1,9 @@
 import logging
+import json
 from odoo import http
 from odoo.http import request
 from odoo.tools import email_normalize
+from odoo.http import Response
 
 _logger = logging.getLogger(__name__)
 
@@ -13,12 +15,29 @@ class EbillSubscriptionController(http.Controller):
         biller_id = request.env['ir.config_parameter'].sudo().get_param('ebill_postfinance.biller_id')
         return request.env['ebill.postfinance.service'].sudo().search([('biller_id', '=', biller_id)], limit=1)
 
-    @http.route('/ebill/bulk/search', type='json', auth='public', methods=['POST'])
-    def subscribe(self, **kw):
-        bill_recipient_id = ['elias.keller@gmail.com']
+    @http.route('/ebill/bulk/search', type='json', auth='public', methods=['POST'], sitemap=False)
+    def bulk_search(self, **kw):
+        try:
+            data = json.loads(request.httprequest.data)
+            recipient_ids = data.get('params', {}).get('recipient_ids')
 
-        ebill_service = self._get_ebill_service()
-        token_sub = ebill_service.get_ebill_recipient_subscription_status_bulk(bill_recipient_id)
+            if not isinstance(recipient_ids, list):
+                return {'info': 'The param recipient_ids has to be a list.'}
+
+            ebill_service = self._get_ebill_service()
+            results = ebill_service.get_ebill_recipient_subscription_status_bulk(recipient_ids)
+
+            #TODO create contract with results
+
+            return results
+
+        except Exception as e:
+            if 'Missing element SubmissionStatus' in str(e):
+                _logger.warning("No ebill recipient found for the given IDs (service raised exception).")
+                return {'info': 'No ebill recipient was found for the provided recipient_ids.'}
+            else:
+                _logger.error(f"Unexpected Exception during bulk search occurred: {e}", exc_info=True)
+                return {'error': 'An internal server error occurred.'}
 
     @http.route('/ebill/subscribe', type='http', auth='public', website=True, sitemap=False)
     def subscribe(self, **kw):
