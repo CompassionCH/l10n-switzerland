@@ -15,6 +15,15 @@ class EbillSubscriptionController(http.Controller):
         biller_id = request.env['ir.config_parameter'].sudo().get_param('ebill_postfinance.biller_id')
         return request.env['ebill.postfinance.service'].sudo().search([('biller_id', '=', biller_id)], limit=1)
 
+    def _render_ebill_template_as_json(self, template_xml_id, values={}):
+        """Helper to render a template and return it as JSON for AJAX calls."""
+        html = request.env['ir.ui.view']._render_template(template_xml_id, values)
+        return request.make_response(
+            json.dumps({'html': html}),
+            headers=[('Content-Type', 'application/json')]
+        )
+
+
     @http.route('/ebill/bulk/search', type='json', auth='public', methods=['POST'], sitemap=False)
     def bulk_search(self, **kw):
         try:
@@ -39,9 +48,16 @@ class EbillSubscriptionController(http.Controller):
                 _logger.error(f"Unexpected Exception during bulk search occurred: {e}", exc_info=True)
                 return {'error': 'An internal server error occurred.'}
 
-    @http.route('/ebill/subscribe', type='http', auth='public', website=True, sitemap=False)
-    def subscribe(self, **kw):
+    @http.route('/ebill/subscribe', type='json', auth='public', website=True, sitemap=False)
+    def subscribe(self, is_ajax=False, **kw):
         email = kw.get('email')
+
+        if is_ajax:
+            html = request.env['ir.ui.view']._render_template(
+                'ebill_postfinance_recipient_subscription.subscribe_template',
+                {'is_ajax': is_ajax}
+            )
+            return {'html': html}
 
         if email:
             try:
@@ -81,7 +97,7 @@ class EbillSubscriptionController(http.Controller):
             _logger.error(f"Error during the eBill confirmation process for mail '{email}': {e}", exc_info=True)
             return request.render('ebill_postfinance_recipient_subscription.retry_template')
 
-#index = flase
+
     @http.route('/ebill/confirm', type='http', auth='public', website=True, methods=['POST'], sitemap=False)
     def confirm(self, **post):
         token = post.get('token')
