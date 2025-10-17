@@ -9,13 +9,12 @@
             </div>
             <form action="/ebill/validate" method="post">
                 <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
-                <input t-if="is_ajax" type="hidden" name="is_ajax" value="1"/>
                 <div class="mb-3">
                     <label for="email_input" class="form-label">E-Mail-Adresse:</label>
                     <input type="email" name="email" id="email_input" class="form-control" required="1" t-att-value="submitted_email" placeholder="mail@example.com"/>
                 </div>
                 <div class="d-flex justify-content-end">
-                    <button type="submit" class="btn btn-primary">Request validation code</button>
+                    <button type="submit" class="btn btn-primary" data-action="/ebill/validate">Request validation code</button>
                 </div>
             </form>
         </div>
@@ -43,17 +42,16 @@
                 <t t-esc="error"/>
             </div>
             <form action="/ebill/confirm" method="post">
-                <input type="hidden" name="token" t-att-value="token"/>
-                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
-                <input type="hidden" name="email" t-att-value="email"/>
-                <input t-if="is_ajax" type="hidden" name="is_ajax" value="1"/>
+                <input id="token" type="hidden" name="token" t-att-value="token"/>
+                <input id="csrf_token" type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                <input id="email" type="hidden" name="email" t-att-value="email"/>
                 <div class="mb-3">
                     <label for="validation_code_input" class="form-label">Validation code:</label>
                     <input type="text" name="validation_code" id="validation_code_input" class="form-control" required="1" placeholder="123456"/>
                 </div>
                 <div class="d-flex justify-content-end">
                      <button t-if="error" type="submit" class="btn btn-secondary mr-2" formaction="/ebill/validate" formnovalidate="formnovalidate">Resend validation code</button>
-                    <button type="submit" class="btn btn-primary">Confirm</button>
+                    <button type="submit" data-action="/ebill/confirm" class="btn btn-primary">Confirm</button>
                 </div>
             </form>
         </div>
@@ -72,24 +70,47 @@
         </t>
     </template>
 
-    <template id="success_template" name="E-Bill Subscription Successful">
-       <t t-call="portal.frontend_layout">
-            <div class="container py-5">
-                <h1 class="mb-4">Thank you!</h1>
-                <p class="alert alert-success">You have successfully subscribed to E-Bill.</p>
-            </div>
-        </t>
+    <template id="success_template_content" name="E-Bill Retry Content">
+         <div class="col-12 col-lg-8 mx-auto">
+             <h1 class="mb-4">Thank you!</h1>
+             <p class="alert alert-success">You have successfully subscribed to E-Bill.</p>
+         </div>
     </template>
-    <template id="retry_template" name="E-Bill Subscription Failed">
-        <t t-call="portal.frontend_layout">
-            <div class="container py-5">
-                <h1 class="mb-4">Unfortunately, something went wrong.</h1>
-                <p class="alert alert-danger">A technical error occurred. Please try the process again.</p>
-                <div class="d-flex justify-content-end">
-                    <a type="submit" class="btn btn-primary" href="/ebill/subscribe">Retry</a>
+
+    <template id="success_template" name="E-Bill Subscription Successful">
+          <t t-if="not is_ajax">
+             <t t-call="portal.frontend_layout">
+                <div class="container py-5">
+                    <t t-call="ebill_postfinance_recipient_subscription.success_template_content"/>
                 </div>
-            </div>
+            </t>
+        </t>
+        <t t-else="">
+            <t t-call="ebill_postfinance_recipient_subscription.success_template_content"/>
         </t>
     </template>
 
+    <template id="retry_content" name="E-Bill Retry Content">
+         <div class="col-12 col-lg-8 mx-auto">
+             <h1 class="mb-4">Unfortunately, something went wrong.</h1>
+                <p class="alert alert-danger">A technical error occurred. Please try the process again.</p>
+                 <input type="hidden" name="email" t-att-value="email"/>
+                <div class="d-flex justify-content-end">
+                    <a type="submit" class="btn btn-primary" href="/ebill/subscribe" data-action="/ebill/subscribe">Retry</a>
+                </div>
+         </div>
+    </template>
+
+    <template id="retry_template" name="E-Bill Subscription Failed">
+            <t t-if="not is_ajax">
+             <t t-call="portal.frontend_layout">
+                <div class="container py-5">
+                    <t t-call="ebill_postfinance_recipient_subscription.retry_content"/>
+                </div>
+            </t>
+        </t>
+        <t t-else="">
+            <t t-call="ebill_postfinance_recipient_subscription.retry_content"/>
+        </t>
+    </template>
 </odoo>
