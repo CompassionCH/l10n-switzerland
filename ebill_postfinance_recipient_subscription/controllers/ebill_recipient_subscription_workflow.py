@@ -15,8 +15,9 @@ class EbillSubscriptionController(http.Controller):
         biller_id = request.env['ir.config_parameter'].sudo().get_param('ebill_postfinance.biller_id')
         return request.env['ebill.postfinance.service'].sudo().search([('biller_id', '=', biller_id)], limit=1)
 
-    def _render_view(self, is_ajax, template_xml_id, values={}):
-        if is_ajax:
+    def _render_view(self, is_integrated, template_xml_id, values={}):
+        if is_integrated:
+            values["is_integrated"] = is_integrated
             html = request.env['ir.ui.view']._render_template(template_xml_id, values)
             return {'html': html}
         else:
@@ -49,39 +50,43 @@ class EbillSubscriptionController(http.Controller):
                 return {'error': 'An internal server error occurred.'}
 
     @http.route('/ebill/subscribe', type='json', auth='public', website=True, sitemap=False)
-    def subscribe(self, is_ajax=False, **kw):
+    def subscribe(self, is_integrated=False, **kw):
         email = kw.get('email')
 
         if not email:
-            return self._render_view(is_ajax, 'ebill_postfinance_recipient_subscription.subscribe_template')
+            return self._render_view(is_integrated, 'ebill_postfinance_recipient_subscription.subscribe_template')
 
         normalized_email = email_normalize(email)
         if not normalized_email:
-            return self._render_view(is_ajax, 'ebill_postfinance_recipient_subscription.subscribe_template',{'submitted_email': email})
+            return self._render_view(is_integrated, 'ebill_postfinance_recipient_subscription.subscribe_template',{'submitted_email': email})
 
         try:
             ebill_service = self._get_ebill_service()
             token_sub = ebill_service.initiate_ebill_recipient_subscription(email)
 
-            return self._render_view(is_ajax, 'ebill_postfinance_recipient_subscription.validate_template',{
+            return self._render_view(is_integrated, 'ebill_postfinance_recipient_subscription.validate_template',{
                 'token': token_sub.SubscriptionInitiationToken,
                 'email': email,
             })
 
         except Exception as e:
             _logger.warning(f"Failed to initiate eBill subscription for email '{email}'.", exc_info=True)
-            return self._render_view(is_ajax, 'ebill_postfinance_recipient_subscription.subscribe_template',
+            return self._render_view(is_integrated, 'ebill_postfinance_recipient_subscription.subscribe_template',
                               {'submitted_email': email})
 
     @http.route('/ebill/validate', type='json', auth='public', website=True, methods=['POST'], sitemap=False)
-    def validate(self, is_ajax=False, **post):
+    def validate(self, is_integrated=False, **post):
         email = post.get('email')
+
+        normalized_email = email_normalize(email)
+        if not normalized_email:
+            return self._render_view(is_integrated, 'ebill_postfinance_recipient_subscription.subscribe_template',{'submitted_email': email})
 
         try:
             ebill_service = self._get_ebill_service()
             token_sub = ebill_service.initiate_ebill_recipient_subscription(email)
 
-            return self._render_view(is_ajax, 'ebill_postfinance_recipient_subscription.validate_template',{
+            return self._render_view(is_integrated, 'ebill_postfinance_recipient_subscription.validate_template',{
                 'token': token_sub.SubscriptionInitiationToken,
                 'email': email,
             })
@@ -89,13 +94,13 @@ class EbillSubscriptionController(http.Controller):
         except Exception as e:
             _logger.error(f"Error during the eBill confirmation process for mail '{email}': {e}", exc_info=True)
 
-            return self._render_view(is_ajax, 'ebill_postfinance_recipient_subscription.retry_template', {
+            return self._render_view(is_integrated, 'ebill_postfinance_recipient_subscription.retry_template', {
                 'email': email,
             })
 
 
     @http.route('/ebill/confirm', type='json', auth='public', website=True, methods=['POST'], sitemap=False)
-    def confirm(self, is_ajax=False, **post):
+    def confirm(self, is_integrated=False, **post):
         token = post.get('token')
         activation_code = post.get('validation_code')
         email = post.get('email')
@@ -109,7 +114,7 @@ class EbillSubscriptionController(http.Controller):
             if not (partner_data and partner_data.get('eBillAccountID')):
                 _logger.warning(f"eBill validation failed for token '{token}' (e.g., incorrect code).")
 
-                return self._render_view(is_ajax, 'ebill_postfinance_recipient_subscription.validate_template', {
+                return self._render_view(is_integrated, 'ebill_postfinance_recipient_subscription.validate_template', {
                     'error': 'Validation failed. Please check the code.',
                     'token': token,
                     'email': email,
@@ -144,13 +149,50 @@ class EbillSubscriptionController(http.Controller):
                 'postfinance_billerid': partner_data.get('eBillAccountID')
             })
 
-            return self._render_view(is_ajax, 'ebill_postfinance_recipient_subscription.success_template')
+            return self._render_view(is_integrated, 'ebill_postfinance_recipient_subscription.success_template')
 
         except Exception as e:
             _logger.warning(f"Exception during confirmation, likely a wrong activation code for token '{token}': {e}", exc_info=True)
 
-            return self._render_view(is_ajax, 'ebill_postfinance_recipient_subscription.validate_template', {
+            return self._render_view(is_integrated, 'ebill_postfinance_recipient_subscription.validate_template', {
                 'error': 'Validation failed. Please verify the code or check if an eBill connection exists for this email.',
                 'token': token,
                 'email': email,
             })
+
+
+    @http.route('/ebill/current-user/contract', type='json', auth='user', csrf=False, methods=['POST'], sitemap=False)
+    def ebill_me_contract(self, **kw):
+        try:
+            user = request.env.user
+            partner = user.sudo().partner_id
+            if not partner or partner == request.env.ref('base.public_partner', raise_if_not_found=False):
+                return {"has_contract": False, "contract": None}
+
+            active_states = ['open', 'active', 'confirmed']
+
+            Contract = request.env['ebill.payment.contract'].sudo()
+            contract = Contract.search([
+                ('partner_id', '=', partner.id),
+                ('transmit_method_id.code', '=', 'postfinance'),
+                ('state', 'in', active_states),
+            ], order='id desc', limit=1)
+
+            if not contract:
+                return {"has_contract": False, "contract": None}
+
+            return {
+                "has_contract": True,
+                "contract": {
+                    "id": contract.id,
+                    "state": contract.state,
+                    "partner_id": partner.id,
+                    "partner_name": partner.name,
+                    "transmit_method": 'postfinance',
+                    "postfinance_billerid": contract.postfinance_billerid or None,
+                    "service_id": contract.postfinance_service_id.id if contract.postfinance_service_id else None,
+                }
+            }
+        except Exception as e:
+            _logger.error("Error in /ebill/me/contract: %s", e, exc_info=True)
+            return {"error": "Could not check eBill contract for current user."}

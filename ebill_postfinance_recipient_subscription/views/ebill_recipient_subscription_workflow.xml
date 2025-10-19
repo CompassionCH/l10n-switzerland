@@ -2,13 +2,12 @@
 <odoo>
 
     <template id="subscribe_template_content" name="E-Bill Subscription Content">
-        <div class="col-12 col-lg-8 mx-auto">
+        <div class="col-12 mx-auto">
             <h1 class="mb-4">Subscribe to E-Bill</h1>
             <div t-if="error" class="alert alert-danger" role="alert">
                 <t t-esc="error"/>
             </div>
             <form action="/ebill/validate" method="post">
-                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
                 <div class="mb-3">
                     <label for="email_input" class="form-label">E-Mail-Adresse:</label>
                     <input type="email" name="email" id="email_input" class="form-control" required="1" t-att-value="submitted_email" placeholder="mail@example.com"/>
@@ -21,7 +20,7 @@
     </template>
 
     <template id="subscribe_template" name="E-Bill Subscription">
-        <t t-if="not is_ajax">
+        <t t-if="not is_integrated">
             <t t-call="portal.frontend_layout">
                 <div class="container py-5">
                     <t t-call="ebill_postfinance_recipient_subscription.subscribe_template_content"/>
@@ -35,7 +34,7 @@
 
 
     <template id="validate_template_content" name="E-Bill Validation Content">
-        <div class="col-12 col-lg-8 mx-auto">
+        <div class="col-12 mx-auto">
             <h1 class="mb-4">Enter your validation code</h1>
             <p>We have sent a validation code to <t t-esc="email"/>.</p>
             <div t-if="error" class="alert alert-danger" role="alert">
@@ -43,7 +42,6 @@
             </div>
             <form action="/ebill/confirm" method="post">
                 <input id="token" type="hidden" name="token" t-att-value="token"/>
-                <input id="csrf_token" type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
                 <input id="email" type="hidden" name="email" t-att-value="email"/>
                 <div class="mb-3">
                     <label for="validation_code_input" class="form-label">Validation code:</label>
@@ -58,7 +56,7 @@
     </template>
 
     <template id="validate_template" name="E-Bill Validation">
-        <t t-if="not is_ajax">
+        <t t-if="not is_integrated">
              <t t-call="portal.frontend_layout">
                 <div class="container py-5">
                     <t t-call="ebill_postfinance_recipient_subscription.validate_template_content"/>
@@ -71,14 +69,14 @@
     </template>
 
     <template id="success_template_content" name="E-Bill Retry Content">
-         <div class="col-12 col-lg-8 mx-auto">
+         <div class="col-12 mx-auto">
              <h1 class="mb-4">Thank you!</h1>
              <p class="alert alert-success">You have successfully subscribed to E-Bill.</p>
          </div>
     </template>
 
     <template id="success_template" name="E-Bill Subscription Successful">
-          <t t-if="not is_ajax">
+          <t t-if="not is_integrated">
              <t t-call="portal.frontend_layout">
                 <div class="container py-5">
                     <t t-call="ebill_postfinance_recipient_subscription.success_template_content"/>
@@ -91,7 +89,7 @@
     </template>
 
     <template id="retry_content" name="E-Bill Retry Content">
-         <div class="col-12 col-lg-8 mx-auto">
+         <div class="col-12 mx-auto">
              <h1 class="mb-4">Unfortunately, something went wrong.</h1>
                 <p class="alert alert-danger">A technical error occurred. Please try the process again.</p>
                  <input type="hidden" name="email" t-att-value="email"/>
@@ -102,7 +100,7 @@
     </template>
 
     <template id="retry_template" name="E-Bill Subscription Failed">
-            <t t-if="not is_ajax">
+            <t t-if="not is_integrated">
              <t t-call="portal.frontend_layout">
                 <div class="container py-5">
                     <t t-call="ebill_postfinance_recipient_subscription.retry_content"/>
