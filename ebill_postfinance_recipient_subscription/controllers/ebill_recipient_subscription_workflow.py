@@ -15,13 +15,13 @@ class EbillSubscriptionController(http.Controller):
         biller_id = request.env['ir.config_parameter'].sudo().get_param('ebill_postfinance.biller_id')
         return request.env['ebill.postfinance.service'].sudo().search([('biller_id', '=', biller_id)], limit=1)
 
-    def _render_ebill_template_as_json(self, template_xml_id, values={}):
-        """Helper to render a template and return it as JSON for AJAX calls."""
-        html = request.env['ir.ui.view']._render_template(template_xml_id, values)
-        return request.make_response(
-            json.dumps({'html': html}),
-            headers=[('Content-Type', 'application/json')]
-        )
+    def _render_view(self, is_ajax, template_xml_id, values={}):
+        if is_ajax:
+            html = request.env['ir.ui.view']._render_template(template_xml_id, values)
+            return {'html': html}
+        else:
+            return request.render(template_xml_id, values)
+
 
 
     @http.route('/ebill/bulk/search', type='json', auth='public', methods=['POST'], sitemap=False)
@@ -52,71 +52,46 @@ class EbillSubscriptionController(http.Controller):
     def subscribe(self, is_ajax=False, **kw):
         email = kw.get('email')
 
-        if is_ajax:
-            html = request.env['ir.ui.view']._render_template(
-                'ebill_postfinance_recipient_subscription.subscribe_template',
-                {'is_ajax': is_ajax}
-            )
-            return {'html': html}
+        if not email:
+            return self._render_view(is_ajax, 'ebill_postfinance_recipient_subscription.subscribe_template')
 
-        if email:
-            try:
-                normalized_email = email_normalize(email)
-                if not normalized_email:
-                    return request.render('ebill_postfinance_recipient_subscription.subscribe_template', {
-                        'submitted_email': email
-                    })
+        normalized_email = email_normalize(email)
+        if not normalized_email:
+            return self._render_view(is_ajax, 'ebill_postfinance_recipient_subscription.subscribe_template',{'submitted_email': email})
 
-                ebill_service = self._get_ebill_service()
-                token_sub = ebill_service.initiate_ebill_recipient_subscription(email)
-
-                return request.render('ebill_postfinance_recipient_subscription.validate_template', {
-                    'token': token_sub.SubscriptionInitiationToken,
-                    'email': email,
-                })
-            except Exception as e:
-                _logger.warning(f"Failed to initiate eBill subscription for email '{email}'.", exc_info=True)
-                return request.render('ebill_postfinance_recipient_subscription.subscribe_template', {
-                    'submitted_email': email
-                })
-
-        return request.render('ebill_postfinance_recipient_subscription.subscribe_template', {})
-
-    @http.route('/ebill/validate', type='json', auth='public', website=True, methods=['POST'], sitemap=False)
-    def validate(self, is_ajax=False, **post):
-        email = post.get('email')
         try:
             ebill_service = self._get_ebill_service()
             token_sub = ebill_service.initiate_ebill_recipient_subscription(email)
 
-            if is_ajax:
-                html = request.env['ir.ui.view']._render_template(
-                    'ebill_postfinance_recipient_subscription.validate_template',
-                    {
-                        'is_ajax': is_ajax,
-                        'token': token_sub.SubscriptionInitiationToken,
-                        'email': email
-                    }
-                )
-                return {'html': html}
-
-            return request.render('ebill_postfinance_recipient_subscription.validate_template', {
+            return self._render_view(is_ajax, 'ebill_postfinance_recipient_subscription.validate_template',{
                 'token': token_sub.SubscriptionInitiationToken,
                 'email': email,
             })
+
+        except Exception as e:
+            _logger.warning(f"Failed to initiate eBill subscription for email '{email}'.", exc_info=True)
+            return self._render_view(is_ajax, 'ebill_postfinance_recipient_subscription.subscribe_template',
+                              {'submitted_email': email})
+
+    @http.route('/ebill/validate', type='json', auth='public', website=True, methods=['POST'], sitemap=False)
+    def validate(self, is_ajax=False, **post):
+        email = post.get('email')
+
+        try:
+            ebill_service = self._get_ebill_service()
+            token_sub = ebill_service.initiate_ebill_recipient_subscription(email)
+
+            return self._render_view(is_ajax, 'ebill_postfinance_recipient_subscription.validate_template',{
+                'token': token_sub.SubscriptionInitiationToken,
+                'email': email,
+            })
+
         except Exception as e:
             _logger.error(f"Error during the eBill confirmation process for mail '{email}': {e}", exc_info=True)
 
-            if is_ajax:
-                html = request.env['ir.ui.view']._render_template(
-                    'ebill_postfinance_recipient_subscription.retry_template',
-                    {
-                            'is_ajax': is_ajax,
-                            'email': email
-                        }
-                )
-                return {'html': html}
-            return request.render('ebill_postfinance_recipient_subscription.retry_template')
+            return self._render_view(is_ajax, 'ebill_postfinance_recipient_subscription.retry_template', {
+                'email': email,
+            })
 
 
     @http.route('/ebill/confirm', type='json', auth='public', website=True, methods=['POST'], sitemap=False)
@@ -134,21 +109,11 @@ class EbillSubscriptionController(http.Controller):
             if not (partner_data and partner_data.get('eBillAccountID')):
                 _logger.warning(f"eBill validation failed for token '{token}' (e.g., incorrect code).")
 
-                if is_ajax:
-                    html = request.env['ir.ui.view']._render_template(
-                        'ebill_postfinance_recipient_subscription.subscribe_template',
-                        {
-                                    'error': 'Validation failed. Please check the code.',
-                                    'submitted_email': email
-                                }
-                    )
-                    return {'html': html}
-
-                return request.render('ebill_postfinance_recipient_subscription.subscribe_template',
-                                      {
-                                                'error': 'Validation failed. Please check the code.',
-                                                'submitted_email': email
-                                            })
+                return self._render_view(is_ajax, 'ebill_postfinance_recipient_subscription.validate_template', {
+                    'error': 'Validation failed. Please check the code.',
+                    'token': token,
+                    'email': email,
+                })
 
             partner_email = partner_data.get('eMailAddress')
             partner = request.env['res.partner'].sudo().search([('email', '=', partner_email)], limit=1)
@@ -179,27 +144,13 @@ class EbillSubscriptionController(http.Controller):
                 'postfinance_billerid': partner_data.get('eBillAccountID')
             })
 
-            if is_ajax:
-                html = request.env['ir.ui.view']._render_template('ebill_postfinance_recipient_subscription.success_template',{})
-                return {'html': html}
-
-            return request.render('ebill_postfinance_recipient_subscription.success_template', {})
+            return self._render_view(is_ajax, 'ebill_postfinance_recipient_subscription.success_template')
 
         except Exception as e:
             _logger.warning(f"Exception during confirmation, likely a wrong activation code for token '{token}': {e}", exc_info=True)
 
-            if is_ajax:
-                html = request.env['ir.ui.view']._render_template(
-                    'ebill_postfinance_recipient_subscription.validate_template', {
-                'error': 'The Validation Code was wrong. Please try again or request a new one.',
+            return self._render_view(is_ajax, 'ebill_postfinance_recipient_subscription.validate_template', {
+                'error': 'Validation failed. Please verify the code or check if an eBill connection exists for this email.',
                 'token': token,
                 'email': email,
-                'is_ajax': is_ajax
-            })
-                return {'html': html}
-
-            return request.render('ebill_postfinance_recipient_subscription.validate_template', {
-                'error': 'The Validation Code was wrong. Please try again or request a new one.',
-                'token': token,
-                'email': email
             })
