@@ -15,6 +15,9 @@ class EbillSubscriptionController(http.Controller):
         biller_id = request.env['ir.config_parameter'].sudo().get_param('ebill_postfinance.biller_id')
         return request.env['ebill.postfinance.service'].sudo().search([('biller_id', '=', biller_id)], limit=1)
 
+    def _get_ebill_transmit_metod(self):
+        return request.env['transmit.method'].sudo().search([('code', '=', 'postfinance')], limit=1)
+
     def _render_view(self, is_integrated, template_xml_id, values={}):
         if is_integrated:
             values["is_integrated"] = is_integrated
@@ -140,10 +143,10 @@ class EbillSubscriptionController(http.Controller):
                     'email': partner_email
                 })
 
-            transmit_method_id = request.env['transmit.method'].sudo().search([('code', '=', 'postfinance')], limit=1)
+            transmit_method = self._get_ebill_transmit_metod()
             request.env['ebill.payment.contract'].sudo().create({
                 'partner_id': partner.id,
-                'transmit_method_id': transmit_method_id.id,
+                'transmit_method_id': transmit_method.id,
                 'state': 'open',
                 'postfinance_service_id': ebill_service.id,
                 'postfinance_billerid': partner_data.get('eBillAccountID')
@@ -166,33 +169,41 @@ class EbillSubscriptionController(http.Controller):
         try:
             user = request.env.user
             partner = user.sudo().partner_id
+
             if not partner or partner == request.env.ref('base.public_partner', raise_if_not_found=False):
                 return {"has_contract": False, "contract": None}
 
-            active_states = ['open', 'active', 'confirmed']
-
-            Contract = request.env['ebill.payment.contract'].sudo()
-            contract = Contract.search([
-                ('partner_id', '=', partner.id),
-                ('transmit_method_id.code', '=', 'postfinance'),
-                ('state', 'in', active_states),
-            ], order='id desc', limit=1)
+            transmit_method = self._get_ebill_transmit_metod()
+            active_states = ['draft', 'open', 'cancel']
+            extra_domain = [('state', 'in', active_states)]
+            contract = partner.sudo().get_active_contract(transmit_method, domain=extra_domain)
 
             if not contract:
-                return {"has_contract": False, "contract": None}
+                return {
+                    "has_contract": False,
+                    "contract": None,
+                    "partner": {
+                    "id": partner.id,
+                    "name": partner.name,
+                    "email": partner.email
+                    }
+                }
 
             return {
                 "has_contract": True,
+                "partner": {
+                    "id": partner.id,
+                    "name": partner.name,
+                    "email": partner.email
+                },
                 "contract": {
                     "id": contract.id,
                     "state": contract.state,
-                    "partner_id": partner.id,
-                    "partner_name": partner.name,
-                    "transmit_method": 'postfinance',
+                    "transmit_method": transmit_method.name,
                     "postfinance_billerid": contract.postfinance_billerid or None,
                     "service_id": contract.postfinance_service_id.id if contract.postfinance_service_id else None,
                 }
             }
         except Exception as e:
-            _logger.error("Error in /ebill/me/contract: %s", e, exc_info=True)
+            _logger.error("Error in /ebill/current-user/contract: %s", e, exc_info=True)
             return {"error": "Could not check eBill contract for current user."}
