@@ -2,8 +2,8 @@
 <odoo>
 
     <template id="subscribe_template_content" name="E-Bill Subscription Content">
-        <div class="col-12 mx-auto">
-            <h1 class="mb-4">Subscribe to E-Bill</h1>
+        <div class="col-12 mx-auto my-2">
+            <h1 class="mb-4 mt-0">Subscribe to E-Bill</h1>
             <div t-if="error" class="alert alert-danger" role="alert">
                 <t t-esc="error"/>
             </div>
@@ -34,8 +34,8 @@
 
 
     <template id="validate_template_content" name="E-Bill Validation Content">
-        <div class="col-12 mx-auto">
-            <h1 class="mb-4">Enter your validation code</h1>
+        <div class="col-12 mx-auto my-2">
+            <h1 class="mb-4 mt-0">Enter your validation code</h1>
             <p>We have sent a validation code to <t t-esc="email"/>.</p>
             <div t-if="error" class="alert alert-danger" role="alert">
                 <t t-esc="error"/>
@@ -69,8 +69,8 @@
     </template>
 
     <template id="retry_content" name="E-Bill Retry Content">
-         <div class="col-12 mx-auto">
-             <h1 class="mb-4">Unfortunately, something went wrong.</h1>
+         <div class="col-12 mx-auto my-2">
+             <h1 class="mb-4 mt-0">Unfortunately, something went wrong.</h1>
                 <p class="alert alert-danger">A technical error occurred. Please try the process again.</p>
                  <input type="hidden" name="email" t-att-value="email"/>
                 <div class="d-flex justify-content-end">
@@ -93,8 +93,8 @@
     </template>
 
     <template id="success_template_content" name="E-Bill Retry Content">
-         <div class="col-12 mx-auto">
-             <h1 class="mb-4">Thank you!</h1>
+         <div class="col-12 mx-auto my-2">
+             <h1 class="mb-4 mt-0">Thank you!</h1>
              <p>You have successfully subscribed to E-Bill.</p>
              <div id="ebill-success-marker" data-ebill-success="1"></div>
          </div>
