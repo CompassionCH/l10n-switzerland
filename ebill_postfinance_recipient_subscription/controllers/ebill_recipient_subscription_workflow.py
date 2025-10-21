@@ -3,7 +3,6 @@ import json
 from odoo import http
 from odoo.http import request
 from odoo.tools import email_normalize
-from odoo.http import Response
 
 _logger = logging.getLogger(__name__)
 
@@ -21,14 +20,13 @@ class EbillSubscriptionController(http.Controller):
     def _render_view(self, is_integrated, template_xml_id, values={}):
         if is_integrated:
             values["is_integrated"] = is_integrated
-            html = request.env['ir.ui.view']._render_template(template_xml_id, values)
-            return {'html': html}
+            return request.env['ir.ui.view']._render_template(template_xml_id, values)
         else:
             return request.render(template_xml_id, values)
 
 
 
-    @http.route('/ebill/bulk/search', type='json', auth='public', methods=['POST'], sitemap=False)
+    @http.route('/ebill/bulk/search', type='http', auth='public', methods=['POST'], sitemap=False)
     def bulk_search(self, **kw):
         try:
             data = json.loads(request.httprequest.data)
@@ -52,7 +50,7 @@ class EbillSubscriptionController(http.Controller):
                 _logger.error(f"Unexpected Exception during bulk search occurred: {e}", exc_info=True)
                 return {'error': 'An internal server error occurred.'}
 
-    @http.route('/ebill/subscribe', type='json', auth='public', website=True, sitemap=False)
+    @http.route('/ebill/subscribe', type='http', auth='public', website=True, methods=['GET', 'POST'], sitemap=False, csrf=False)
     def subscribe(self, is_integrated=False, **kw):
         email = kw.get('email')
 
@@ -77,7 +75,7 @@ class EbillSubscriptionController(http.Controller):
             return self._render_view(is_integrated, 'ebill_postfinance_recipient_subscription.subscribe_template',
                               {'submitted_email': email})
 
-    @http.route('/ebill/validate', type='json', auth='public', website=True, methods=['POST'], sitemap=False)
+    @http.route('/ebill/validate', type='http', auth='public', website=True, methods=['POST'], sitemap=False, csrf=False)
     def validate(self, is_integrated=False, **post):
         email = post.get('email')
 
@@ -102,7 +100,7 @@ class EbillSubscriptionController(http.Controller):
             })
 
 
-    @http.route('/ebill/confirm', type='json', auth='public', website=True, methods=['POST'], sitemap=False)
+    @http.route('/ebill/confirm', type='http', auth='public', website=True, methods=['POST'], sitemap=False, csrf=False)
     def confirm(self, is_integrated=False, **post):
         token = post.get('token')
         activation_code = post.get('validation_code')
@@ -118,7 +116,7 @@ class EbillSubscriptionController(http.Controller):
                 _logger.warning(f"eBill validation failed for token '{token}' (e.g., incorrect code).")
 
                 return self._render_view(is_integrated, 'ebill_postfinance_recipient_subscription.validate_template', {
-                    'error': 'Validation failed. Please check the code.',
+                    'error': 'Validation failed. Please verify the code or check if an eBill connection is possible with this email.',
                     'token': token,
                     'email': email,
                 })
@@ -158,7 +156,7 @@ class EbillSubscriptionController(http.Controller):
             _logger.warning(f"Exception during confirmation, likely a wrong activation code for token '{token}': {e}", exc_info=True)
 
             return self._render_view(is_integrated, 'ebill_postfinance_recipient_subscription.validate_template', {
-                'error': 'Validation failed. Please verify the code or check if an eBill connection exists for this email.',
+                'error': 'Validation failed. Please verify the code or check if an eBill connection is possible with this email.',
                 'token': token,
                 'email': email,
             })
