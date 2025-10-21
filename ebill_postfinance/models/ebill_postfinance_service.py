@@ -160,24 +160,6 @@ class EbillPostfinanceService(models.Model):
 
     def confirm_ebill_recipient_subscription(self, initiation_token, activation_code):
         service = self._get_service()
-
-        return {
-            "eBillAccountID": "41012178193445685",
-            "eMailAddress": "annechampion99@gmail.com",
-            "Type": "PRIVATE",
-            "Language": "123",
-            "Party": {
-                "Address": {
-                    "CompanyName": "Elias Keller",
-                    "LastName": "Keller",
-                    "GivenName": "Elias",
-                    "Address1": "Sonnegg 4",
-                    "ZIP": "9606",
-                    "City": "Bütschwil",
-                    "Country": "CH",
-                }
-            }
-        }
         res = service.confirm_ebill_recipient_subscription(initiation_token, activation_code)
         return res
 
