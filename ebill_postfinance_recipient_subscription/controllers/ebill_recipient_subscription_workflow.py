@@ -29,7 +29,8 @@ def _get_ebill_transmit_method():
     )
 
 
-def _render_view(is_integrated, template_xml_id, values={}):
+def _render_view(is_integrated, template_xml_id, values=None):
+    values = dict(values or {})
     if is_integrated:
         values["is_integrated"] = is_integrated
         return request.env["ir.ui.view"]._render_template(template_xml_id, values)
@@ -44,7 +45,7 @@ def _ensure_partner_and_contract(ebill_recipient_info, ebill_service):
     ).strip() or None
     name = ebill_recipient_info.get("name")
     street = (ebill_recipient_info.get("street") or "").strip() or None
-    zip = (ebill_recipient_info.get("zip") or "").strip() or None
+    zip_code = (ebill_recipient_info.get("zip") or "").strip() or None
     city = (ebill_recipient_info.get("city") or "").strip() or None
 
     if not email or not ebill_account_id:
@@ -58,8 +59,8 @@ def _ensure_partner_and_contract(ebill_recipient_info, ebill_service):
         vals = {"name": name, "email": email}
         if street:
             vals["street"] = street
-        if zip:
-            vals["zip"] = zip
+        if zip_code:
+            vals["zip"] = zip_code
         if city:
             vals["city"] = city
         partner = Partner.create(vals)
@@ -112,10 +113,18 @@ class EbillSubscriptionController(http.Controller):
                 recipient_ids
             )
 
-            received_recipients = (
-                getattr(getattr(results, "BillRecipients", None), "BillRecipient", [])
-                or []
+            bill_recipients_obj = (
+                results.BillRecipients if hasattr(results, "BillRecipients") else None
             )
+            received_recipients = (
+                bill_recipients_obj.BillRecipient
+                if (
+                    bill_recipients_obj
+                    and hasattr(bill_recipients_obj, "BillRecipient")
+                )
+                else []
+            )
+
             allowed_recipients = [
                 r
                 for r in received_recipients
