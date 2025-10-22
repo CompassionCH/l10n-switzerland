@@ -39,11 +39,13 @@ def _render_view(is_integrated, template_xml_id, values={}):
 
 def _ensure_partner_and_contract(ebill_recipient_info, ebill_service):
     email = (ebill_recipient_info.get("email") or "").strip() or None
-    ebill_account_id = (ebill_recipient_info.get("ebill_account_id") or "").strip() or None
+    ebill_account_id = (
+        ebill_recipient_info.get("ebill_account_id") or ""
+    ).strip() or None
     name = ebill_recipient_info.get("name")
     street = (ebill_recipient_info.get("street") or "").strip() or None
-    zip   = (ebill_recipient_info.get("zip") or "").strip() or None
-    city   = (ebill_recipient_info.get("city") or "").strip() or None
+    zip = (ebill_recipient_info.get("zip") or "").strip() or None
+    city = (ebill_recipient_info.get("city") or "").strip() or None
 
     if not email or not ebill_account_id:
         raise ValueError("email and ebill_account_id is required")
@@ -54,9 +56,12 @@ def _ensure_partner_and_contract(ebill_recipient_info, ebill_service):
     partner = Partner.search([("email", "=", email)], limit=1)
     if not partner:
         vals = {"name": name, "email": email}
-        if street: vals["street"] = street
-        if zip:   vals["zip"] = zip
-        if city:   vals["city"] = city
+        if street:
+            vals["street"] = street
+        if zip:
+            vals["zip"] = zip
+        if city:
+            vals["city"] = city
         partner = Partner.create(vals)
 
     transmit_method = _get_ebill_transmit_method()
@@ -139,7 +144,8 @@ class EbillSubscriptionController(http.Controller):
                     )
                 except Exception as e:
                     _logger.error(
-                        f"Create partner/contract failed for email {ebill_recipient_info.get('email')}: {e}", exc_info=True
+                        f"Create partner/contract failed for email {ebill_recipient_info.get('email')}: {e}",
+                        exc_info=True,
                     )
                     errors.append(
                         {"email": ebill_recipient_info.get("email"), "error": str(e)}
@@ -303,10 +309,18 @@ class EbillSubscriptionController(http.Controller):
                 )
 
             partner_address = partner_data.get("Party", {}).get("Address", {})
-            name = (' '.join(filter(None, [
-                        (partner_address.get('GivenName') or '').strip(),
-                        (partner_address.get('LastName') or '').strip()
-                    ])) or (partner_data.get('eMailAddress') or '').split('@', 1)[0])
+            name = (
+                " ".join(
+                    filter(
+                        None,
+                        [
+                            (partner_address.get("GivenName") or "").strip(),
+                            (partner_address.get("LastName") or "").strip(),
+                        ],
+                    )
+                )
+                or (partner_data.get("eMailAddress") or "").split("@", 1)[0]
+            )
 
             ebill_recipient_info = {
                 "email": partner_data.get("eMailAddress"),
