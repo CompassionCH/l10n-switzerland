@@ -24,9 +24,33 @@ class EbillSubscriptionController(http.Controller):
         else:
             return request.render(template_xml_id, values)
 
+    def _create_partner_and_contract(self, email, ebill_account_id, ebill_service):
+        Partner = request.env["res.partner"].sudo()
+        Contract = request.env["ebill.payment.contract"].sudo()
 
+        partner = Partner.search([("email", "=", email)], limit=1)
+        if not partner:
+            partner = Partner.create({"email": email})
 
-    @http.route('/ebill/bulk/search', type='http', auth='public', methods=['POST'], sitemap=False)
+        transmit_method = self._get_ebill_transmit_metod()
+
+        existing = Contract.search([
+            ("partner_id", "=", partner.id),
+            ("postfinance_billerid", "=", ebill_account_id),
+            ("postfinance_service_id", "=", ebill_service.id),
+            ("state", "=", "open")
+        ], limit=1)
+
+        if not existing:
+            Contract.create({
+                "partner_id": partner.id,
+                "transmit_method_id": transmit_method.id,
+                "state": "open",
+                "postfinance_service_id": ebill_service.id,
+                "postfinance_billerid": ebill_account_id,
+            })
+
+    @http.route('/ebill/bulk/search', type='json', auth='public', methods=['POST'], sitemap=False, csrf=False)
     def bulk_search(self, **kw):
         try:
             data = json.loads(request.httprequest.data)
@@ -38,9 +62,36 @@ class EbillSubscriptionController(http.Controller):
             ebill_service = self._get_ebill_service()
             results = ebill_service.get_ebill_recipient_subscription_status_bulk(recipient_ids)
 
-            #TODO create contract with results
+            received_recipients = getattr(getattr(results, "BillRecipients", None), "BillRecipient", []) or []
+            allowed_recipients = [
+                r for r in received_recipients
+                if getattr(r, "SubmissionStatus", None) == "ALLOWED"
+            ]
 
-            return results
+            created, errors = [], []
+
+            print(allowed_recipients)
+
+            for recipient in allowed_recipients:
+                ebill_account_id =  getattr(recipient, "EbillAccountID")
+                email =  getattr(recipient, "EmailAddress")
+
+                try:
+                    partner = self._create_partner_and_contract(email, ebill_account_id, ebill_service)
+                    created.append({"email": email, "partner_id": partner.id, "account_id": ebill_account_id})
+                except Exception as e:
+                    _logger.error(f"Create partner/contract failed for {email}: {e}", exc_info=True)
+                    errors.append({"email": email, "error": str(e)})
+
+            return {
+                "summary": {
+                    "total_requested": len(recipient_ids),
+                    "created": len(created),
+                    "errors": len(errors),
+                },
+                "created": created,
+                "errors": errors,
+            }
 
         except Exception as e:
             if 'Missing element SubmissionStatus' in str(e):
