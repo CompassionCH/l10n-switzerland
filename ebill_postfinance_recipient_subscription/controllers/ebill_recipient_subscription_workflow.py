@@ -8,70 +8,84 @@ from odoo.tools import email_normalize
 _logger = logging.getLogger(__name__)
 
 
+def _get_ebill_service():
+    biller_id = (
+        request.env["ir.config_parameter"]
+        .sudo()
+        .get_param("ebill_postfinance.biller_id")
+    )
+    return (
+        request.env["ebill.postfinance.service"]
+        .sudo()
+        .search([("biller_id", "=", biller_id)], limit=1)
+    )
+
+
+def _get_ebill_transmit_method():
+    return (
+        request.env["transmit.method"]
+        .sudo()
+        .search([("code", "=", "postfinance")], limit=1)
+    )
+
+
+def _render_view(is_integrated, template_xml_id, values={}):
+    if is_integrated:
+        values["is_integrated"] = is_integrated
+        return request.env["ir.ui.view"]._render_template(template_xml_id, values)
+    else:
+        return request.render(template_xml_id, values)
+
+
+def _ensure_partner_and_contract(ebill_recipient_info, ebill_service):
+    email = (ebill_recipient_info.get("email") or "").strip() or None
+    ebill_account_id = (ebill_recipient_info.get("ebill_account_id") or "").strip() or None
+    name = ebill_recipient_info.get("name")
+    street = (ebill_recipient_info.get("street") or "").strip() or None
+    zip   = (ebill_recipient_info.get("zip") or "").strip() or None
+    city   = (ebill_recipient_info.get("city") or "").strip() or None
+
+    if not email or not ebill_account_id:
+        raise ValueError("email and ebill_account_id is required")
+
+    Partner = request.env["res.partner"].sudo()
+    Contract = request.env["ebill.payment.contract"].sudo()
+
+    partner = Partner.search([("email", "=", email)], limit=1)
+    if not partner:
+        vals = {"name": name, "email": email}
+        if street: vals["street"] = street
+        if zip:   vals["zip"] = zip
+        if city:   vals["city"] = city
+        partner = Partner.create(vals)
+
+    transmit_method = _get_ebill_transmit_method()
+
+    contract = Contract.search(
+        [
+            ("partner_id", "=", partner.id),
+            ("postfinance_billerid", "=", ebill_account_id),
+            ("postfinance_service_id", "=", ebill_service.id),
+            ("state", "=", "open"),
+        ],
+        limit=1,
+    )
+
+    if not contract:
+        contract = Contract.create(
+            {
+                "partner_id": partner.id,
+                "transmit_method_id": transmit_method.id,
+                "state": "open",
+                "postfinance_service_id": ebill_service.id,
+                "postfinance_billerid": ebill_account_id,
+            }
+        )
+
+    return partner, contract
+
+
 class EbillSubscriptionController(http.Controller):
-    def _get_ebill_service(self):
-        biller_id = (
-            request.env["ir.config_parameter"]
-            .sudo()
-            .get_param("ebill_postfinance.biller_id")
-        )
-        return (
-            request.env["ebill.postfinance.service"]
-            .sudo()
-            .search([("biller_id", "=", biller_id)], limit=1)
-        )
-
-    def _get_ebill_transmit_metod(self):
-        return (
-            request.env["transmit.method"]
-            .sudo()
-            .search([("code", "=", "postfinance")], limit=1)
-        )
-
-    def _render_view(self, is_integrated, template_xml_id, values={}):
-        if is_integrated:
-            values["is_integrated"] = is_integrated
-            return request.env["ir.ui.view"]._render_template(template_xml_id, values)
-        else:
-            return request.render(template_xml_id, values)
-
-    def _ensure_partner_and_contract(self, ebill_recipient_info, ebill_service):
-        email = ebill_recipient_info.get("email")
-        ebill_account_id = ebill_recipient_info.get("ebill_account_id")
-
-        Partner = request.env["res.partner"].sudo()
-        Contract = request.env["ebill.payment.contract"].sudo()
-
-        partner = Partner.search([("email", "=", email)], limit=1)
-        if not partner:
-            name = email.split("@")[0]
-            partner = Partner.create({"name": name, "email": email})
-
-        transmit_method = self._get_ebill_transmit_metod()
-
-        contract = Contract.search(
-            [
-                ("partner_id", "=", partner.id),
-                ("postfinance_billerid", "=", ebill_account_id),
-                ("postfinance_service_id", "=", ebill_service.id),
-                ("state", "=", "open"),
-            ],
-            limit=1,
-        )
-
-        if not contract:
-            contract = Contract.create(
-                {
-                    "partner_id": partner.id,
-                    "transmit_method_id": transmit_method.id,
-                    "state": "open",
-                    "postfinance_service_id": ebill_service.id,
-                    "postfinance_billerid": ebill_account_id,
-                }
-            )
-
-        return partner, contract
-
     @http.route(
         "/ebill/bulk/search",
         type="json",
@@ -86,9 +100,9 @@ class EbillSubscriptionController(http.Controller):
             recipient_ids = data.get("params", {}).get("recipient_ids")
 
             if not isinstance(recipient_ids, list):
-                return {"info": "The param recipient_ids has to be a list."}
+                return {"error": "The param recipient_ids has to be a list."}
 
-            ebill_service = self._get_ebill_service()
+            ebill_service = _get_ebill_service()
             results = ebill_service.get_ebill_recipient_subscription_status_bulk(
                 recipient_ids
             )
@@ -112,7 +126,7 @@ class EbillSubscriptionController(http.Controller):
                 }
 
                 try:
-                    partner, contract = self._ensure_partner_and_contract(
+                    partner, contract = _ensure_partner_and_contract(
                         ebill_recipient_info, ebill_service
                     )
                     created.append(
@@ -125,7 +139,7 @@ class EbillSubscriptionController(http.Controller):
                     )
                 except Exception as e:
                     _logger.error(
-                        f"Create partner/contract failed for: {e}", exc_info=True
+                        f"Create partner/contract failed for email {ebill_recipient_info.get('email')}: {e}", exc_info=True
                     )
                     errors.append(
                         {"email": ebill_recipient_info.get("email"), "error": str(e)}
@@ -147,7 +161,7 @@ class EbillSubscriptionController(http.Controller):
                     "No ebill recipient found for the given IDs (service raised exception)."
                 )
                 return {
-                    "info": "No ebill recipient was found for the provided recipient_ids."
+                    "error": "No ebill recipient was found for the provided recipient_ids."
                 }
             else:
                 _logger.error(
@@ -169,24 +183,24 @@ class EbillSubscriptionController(http.Controller):
         email = kw.get("email")
 
         if not email:
-            return self._render_view(
+            return _render_view(
                 is_integrated,
                 "ebill_postfinance_recipient_subscription.subscribe_template",
             )
 
         normalized_email = email_normalize(email)
         if not normalized_email:
-            return self._render_view(
+            return _render_view(
                 is_integrated,
                 "ebill_postfinance_recipient_subscription.subscribe_template",
                 {"submitted_email": email},
             )
 
         try:
-            ebill_service = self._get_ebill_service()
+            ebill_service = _get_ebill_service()
             token_sub = ebill_service.initiate_ebill_recipient_subscription(email)
 
-            return self._render_view(
+            return _render_view(
                 is_integrated,
                 "ebill_postfinance_recipient_subscription.validate_template",
                 {
@@ -200,7 +214,7 @@ class EbillSubscriptionController(http.Controller):
                 f"Failed to initiate eBill subscription for email '{email}'.",
                 exc_info=True,
             )
-            return self._render_view(
+            return _render_view(
                 is_integrated,
                 "ebill_postfinance_recipient_subscription.subscribe_template",
                 {"submitted_email": email},
@@ -220,17 +234,17 @@ class EbillSubscriptionController(http.Controller):
 
         normalized_email = email_normalize(email)
         if not normalized_email:
-            return self._render_view(
+            return _render_view(
                 is_integrated,
                 "ebill_postfinance_recipient_subscription.subscribe_template",
                 {"submitted_email": email},
             )
 
         try:
-            ebill_service = self._get_ebill_service()
+            ebill_service = _get_ebill_service()
             token_sub = ebill_service.initiate_ebill_recipient_subscription(email)
 
-            return self._render_view(
+            return _render_view(
                 is_integrated,
                 "ebill_postfinance_recipient_subscription.validate_template",
                 {
@@ -245,7 +259,7 @@ class EbillSubscriptionController(http.Controller):
                 exc_info=True,
             )
 
-            return self._render_view(
+            return _render_view(
                 is_integrated,
                 "ebill_postfinance_recipient_subscription.retry_template",
                 {
@@ -266,7 +280,7 @@ class EbillSubscriptionController(http.Controller):
         token = post.get("token")
         activation_code = post.get("validation_code")
         email = post.get("email")
-        ebill_service = self._get_ebill_service()
+        ebill_service = _get_ebill_service()
 
         try:
             partner_data = ebill_service.confirm_ebill_recipient_subscription(
@@ -278,7 +292,7 @@ class EbillSubscriptionController(http.Controller):
                     f"eBill validation failed for token '{token}' (e.g., incorrect code)."
                 )
 
-                return self._render_view(
+                return _render_view(
                     is_integrated,
                     "ebill_postfinance_recipient_subscription.validate_template",
                     {
@@ -289,21 +303,23 @@ class EbillSubscriptionController(http.Controller):
                 )
 
             partner_address = partner_data.get("Party", {}).get("Address", {})
+            name = (' '.join(filter(None, [
+                        (partner_address.get('GivenName') or '').strip(),
+                        (partner_address.get('LastName') or '').strip()
+                    ])) or (partner_data.get('eMailAddress') or '').split('@', 1)[0])
+
             ebill_recipient_info = {
                 "email": partner_data.get("eMailAddress"),
                 "ebill_account_id": partner_data.get("eBillAccountID"),
-                "name": partner_address.get("GivenName")
-                + " "
-                + partner_address.get("LastName")
-                or partner_data.get("eMailAddress").split("@")[0],
+                "name": name,
                 "street": partner_address.get("Address1"),
                 "zip": partner_address.get("ZIP"),
                 "city": partner_address.get("City"),
             }
 
-            self._ensure_partner_and_contract(ebill_recipient_info, ebill_service)
+            _ensure_partner_and_contract(ebill_recipient_info, ebill_service)
 
-            return self._render_view(
+            return _render_view(
                 is_integrated,
                 "ebill_postfinance_recipient_subscription.success_template",
             )
@@ -314,7 +330,7 @@ class EbillSubscriptionController(http.Controller):
                 exc_info=True,
             )
 
-            return self._render_view(
+            return _render_view(
                 is_integrated,
                 "ebill_postfinance_recipient_subscription.validate_template",
                 {
@@ -342,7 +358,7 @@ class EbillSubscriptionController(http.Controller):
             ):
                 return {"has_contract": False, "contract": None}
 
-            transmit_method = self._get_ebill_transmit_metod()
+            transmit_method = _get_ebill_transmit_method()
             active_states = ["draft", "open", "cancel"]
             extra_domain = [("state", "in", active_states)]
             contract = partner.sudo().get_active_contract(
