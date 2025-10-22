@@ -8,8 +8,6 @@
     "license": "AGPL-3",
     "author": "Compassion CH,Odoo Community Association (OCA)",
     "website": "https://github.com/OCA/l10n-switzerland",
-    "depends": [
-        "ebill_postfinance", "account_financial_discount"
-    ],
+    "depends": ["ebill_postfinance", "account_financial_discount"],
     "auto_install": True,
 }

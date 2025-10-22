@@ -3,10 +3,10 @@
 
 from lxml import etree
 
-from odoo import _, api, models
-from odoo.exceptions import UserError
+from odoo import api, models
 
 ACCEPTED_PAIN_FLAVOURS = ("pain.001.001.03.ch.02", "pain.008.001.02.ch.03")
+
 
 class AccountPaymentOrder(models.Model):
     _inherit = "account.payment.order"
@@ -27,14 +27,13 @@ class AccountPaymentOrder(models.Model):
         pain_flavor = self.payment_mode_id.payment_method_id.pain_version
         if pain_flavor in ACCEPTED_PAIN_FLAVOURS:
             attrib = {
-            "{http://www.w3.org/2001/XMLSchema-instance}"
-            "schemaLocation": "http://www.six-interbank-clearing.com/de/%s.xsd  %s.xsd"
-                              % (pain_flavor, pain_flavor)
+                "{http://www.w3.org/2001/XMLSchema-instance}"
+                "schemaLocation": "http://www.six-interbank-clearing.com/de/%s.xsd  %s.xsd"
+                % (pain_flavor, pain_flavor)
             }
             return attrib
         else:
             return super().generate_pain_attrib()
-
 
     @api.model
     def generate_remittance_info_block(self, parent_node, line, gen_args):

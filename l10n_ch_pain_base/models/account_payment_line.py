@@ -9,5 +9,5 @@ class AccountPaymentLine(models.Model):
 
     communication_type = fields.Selection(
         selection_add=[("qrr", "QRR")],
-        ondelete={ "qrr": "set default"},
+        ondelete={"qrr": "set default"},
     )
