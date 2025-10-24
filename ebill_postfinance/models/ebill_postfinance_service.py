@@ -135,11 +135,6 @@ class EbillPostfinanceService(models.Model):
         res = service.get_ebill_recipient_subscription_status(recipient_id)
         return res
 
-    def get_ebill_recipient_subscription_status_bulk(self, bill_recipient_id):
-        service = self._get_service()
-        res = service.get_ebill_recipient_subscription_status_bulk(bill_recipient_id)
-        return res
-
     def get_registration_protocol_list(self, archive_data=False):
         service = self._get_service()
         res = service.get_registration_protocol_list(archive_data)
@@ -150,18 +145,6 @@ class EbillPostfinanceService(models.Model):
     def get_registration_protocol(self, create_date, archive_data=False):
         service = self._get_service()
         res = service.get_registration_protocol(create_date, archive_data)
-        return res
-
-    def initiate_ebill_recipient_subscription(self, recipient_email):
-        service = self._get_service()
-        res = service.initiate_ebill_recipient_subscription(recipient_email)
-        return res
-
-    def confirm_ebill_recipient_subscription(self, initiation_token, activation_code):
-        service = self._get_service()
-        res = service.confirm_ebill_recipient_subscription(
-            initiation_token, activation_code
-        )
         return res
 
     @api.model
