@@ -398,9 +398,13 @@ class AccountPaymentOrder(models.Model):
         if line.payment_line_ids[:1].local_instrument == "LSV+":
             remittance_info = etree.SubElement(parent_node, "RmtInf")
             remittance_info_unstructured = etree.SubElement(remittance_info, "Ustrd")
+
+            base_path = "line.payment_line_ids[0].move_line_id.move_id"
+            field_path = f"{base_path}.ref or {base_path}.name"
+            
             remittance_info_unstructured.text = self._prepare_field(
                 "Remittance Unstructured Information",
-                "line.payment_line_ids[0].move_line_id.move_id.ref or line.payment_line_ids[0].move_line_id.move_id.name",
+                field_path,
                 {"line": line},
                 140,
                 gen_args=gen_args,

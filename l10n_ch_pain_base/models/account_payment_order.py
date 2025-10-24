@@ -53,8 +53,11 @@ class AccountPaymentOrder(models.Model):
             creditor_ref_info_type_code.text = "QRR"
             creditor_reference = etree.SubElement(creditor_ref_information, "Ref")
             creditor_reference.text = line.payment_line_ids[0].communication
-            # to uncomment when schema pain.001.001.09.ch.03 is implemented in account_banking_pain_base
+            # to uncomment when schema pain.001.001.09.ch.03
+            # is implemented in account_banking_pain_base
             # remittance_info_structured = etree.SubElement(remittance_info, "AddtlRmtInf")
-            # remittance_info_structured.text = line.payment_line_ids[0].move_line_id.move_id.ref or ""
+            # remittance_info_structured.text = (
+            #     line.payment_line_ids[0].move_line_id.move_id.ref or ""
+            # )
         else:
             super().generate_remittance_info_block(parent_node, line, gen_args)
