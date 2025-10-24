@@ -4,10 +4,7 @@
 import logging
 import logging.config
 
-from ebilling_postfinance import ebilling_postfinance
-
-from odoo import api, fields, models
-from odoo.exceptions import UserError
+from odoo import models
 
 _logger = logging.getLogger(__name__)
 
