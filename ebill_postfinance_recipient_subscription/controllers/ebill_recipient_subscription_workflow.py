@@ -135,8 +135,8 @@ class EbillSubscriptionController(http.Controller):
 
             for recipient in allowed_recipients:
                 ebill_recipient_info = {
-                    "email": getattr(recipient, "EmailAddress"),
-                    "ebill_account_id": getattr(recipient, "EbillAccountID"),
+                    "email": recipient.EmailAddress,
+                    "ebill_account_id": recipient.EbillAccountID,
                 }
 
                 try:
@@ -153,7 +153,9 @@ class EbillSubscriptionController(http.Controller):
                     )
                 except Exception as e:
                     _logger.error(
-                        f"Create partner/contract failed for email {ebill_recipient_info.get('email')}: {e}",
+                        "Create partner/contract failed for email %s: %s",
+                        ebill_recipient_info.get("email"),
+                        e,
                         exc_info=True,
                     )
                     errors.append(
@@ -311,7 +313,10 @@ class EbillSubscriptionController(http.Controller):
                     is_integrated,
                     "ebill_postfinance_recipient_subscription.validate_template",
                     {
-                        "error": "Validation failed. Please verify the code or check if an eBill connection is possible with this email.",
+                        "error": (
+                            "Validation failed. Please verify the code or check "
+                            "if an eBill connection is possible with this email."
+                        ),
                         "token": token,
                         "email": email,
                     },
@@ -349,7 +354,10 @@ class EbillSubscriptionController(http.Controller):
 
         except Exception as e:
             _logger.warning(
-                f"Exception during confirmation, likely a wrong activation code for token '{token}': {e}",
+                "Exception during confirmation, likely "
+                "a wrong activation code for token '%s': %s",
+                token,
+                e,
                 exc_info=True,
             )
 
@@ -357,7 +365,10 @@ class EbillSubscriptionController(http.Controller):
                 is_integrated,
                 "ebill_postfinance_recipient_subscription.validate_template",
                 {
-                    "error": "Validation failed. Please verify the code or check if an eBill connection is possible with this email.",
+                    "error": (
+                        "Validation failed. Please verify the code or check "
+                        "if an eBill connection is possible with this email."
+                    ),
                     "token": token,
                     "email": email,
                 },
