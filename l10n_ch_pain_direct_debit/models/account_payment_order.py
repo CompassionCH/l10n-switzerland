@@ -401,7 +401,7 @@ class AccountPaymentOrder(models.Model):
 
             base_path = "line.payment_line_ids[0].move_line_id.move_id"
             field_path = f"{base_path}.ref or {base_path}.name"
-            
+
             remittance_info_unstructured.text = self._prepare_field(
                 "Remittance Unstructured Information",
                 field_path,
