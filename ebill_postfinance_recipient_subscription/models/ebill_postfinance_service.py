@@ -117,6 +117,11 @@ class EbillPostfinanceService(models.Model):
             _logger.error("eBill registration cron: Failed to get registration protocol list: %s", e, exc_info=True)
             return
 
+        if not registration_lists:
+            registration_lists = []
+
+        _logger.info("Found %s registration protocol list(s) to process.", len(registration_lists))
+
         for registration_list in registration_lists:
             _logger.info("Processing registration list from %s", registration_list.CreateDate)
             try:
@@ -126,7 +131,7 @@ class EbillPostfinanceService(models.Model):
                     "eBill registration cron: Failed to get protocol file for date %s: %s",
                     registration_list.CreateDate, e, exc_info=True
                 )
-                continue  # Skip to the next list
+                continue
 
             for file in files:
                 _logger.info("Processing file: %s", file.Filename)

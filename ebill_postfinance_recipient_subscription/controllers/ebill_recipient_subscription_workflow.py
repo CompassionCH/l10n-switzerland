@@ -331,7 +331,8 @@ class EbillSubscriptionController(http.Controller):
             ):
                 return {"has_contract": False, "contract": None}
 
-            transmit_method = _get_ebill_transmit_method()
+            ebill_service = _get_ebill_service()
+            transmit_method = ebill_service._get_ebill_transmit_method()
             active_states = ["draft", "open", "cancel"]
             extra_domain = [("state", "in", active_states)]
             contract = partner.sudo().get_active_contract(
