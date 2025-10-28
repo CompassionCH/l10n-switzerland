@@ -4,7 +4,6 @@
 import logging.config
 import csv
 import io
-import datetime
 
 from odoo import models
 
@@ -107,98 +106,73 @@ class EbillPostfinanceService(models.Model):
 
         ebill_service = self._get_ebill_service_instance()
 
-        if not ebill_service:
-            _logger.error("eBill registration cron: No eBill service found. Cron job aborted.")
+        registrations_lists = ebill_service.get_registration_protocol_list()
+
+        if not registrations_lists:
+            _logger.info("Nothing could be find to be imported")
             return
 
-        try:
-            registration_lists = ebill_service.get_registration_protocol_list()
-        except Exception as e:
-            _logger.error("eBill registration cron: Failed to get registration protocol list: %s", e, exc_info=True)
-            return
-
-        if not registration_lists:
-            registration_lists = []
-
-        _logger.info("Found %s registration protocol list(s) to process.", len(registration_lists))
-
-        for registration_list in registration_lists:
-            _logger.info("Processing registration list from %s", registration_list.CreateDate)
+        for registrations in registrations_lists:
             try:
-                files = ebill_service.get_registration_protocol_list(registration_list.CreateDate)
-            except Exception as e:
-                _logger.error(
-                    "eBill registration cron: Failed to get protocol file for date %s: %s",
-                    registration_list.CreateDate, e, exc_info=True
-                )
-                continue
-
-            for file in files:
-                _logger.info("Processing file: %s", file.Filename)
-                try:
+                files = ebill_service.get_registration_protocol(registrations.CreateDate)
+                for file in files:
                     data_bytes = file.Data
-                    # Decode using utf-8, as examples show special characters
                     decoded_data = data_bytes.decode('utf-8')
                     data_file = io.StringIO(decoded_data)
                     csv_reader = csv.DictReader(data_file, delimiter=';')
 
                     for line in csv_reader:
-                        try:
-                            subscription_type = line.get("SUBSCRIPTIONTYPE", "").strip()
-                            email = line.get("EMAIL", "").strip()
-                            recipient_id = line.get("RECIPIENTID", "").strip()
+                        subscription_type = line.get("SUBSCRIPTIONTYPE", "").strip()
+                        email = line.get("EMAIL", "").strip()
+                        recipient_id = line.get("RECIPIENTID", "").strip()
 
-                            if not recipient_id:
+                        if not recipient_id:
+                            _logger.warning(
+                                "Skipping line in %s: No RECIPIENTID found. Line: %s",
+                                        file.Filename, line
+                            )
+                            continue
+
+                        if subscription_type == "1":
+                            ebill_recipient_info = {
+                                "email": email,
+                                "ebill_account_id": recipient_id,
+                                "name": " ".join(filter(None, [
+                                    line.get("GIVENNAME", "").strip(),
+                                    line.get("FAMILYNAME", "").strip(),
+                                    line.get("COMPANYNAME", "").strip(),
+                                ])),
+                                "street": line.get("ADDRESS", "").strip(),
+                                "zip": line.get("ZIP", "").strip(),
+                                "city": line.get("CITY", "").strip(),
+                            }
+
+                            if not email:
+                                # TODO
                                 _logger.warning(
-                                    "Skipping line in %s: No RECIPIENTID found. Line: %s",
-                                    file.Filename, line
+                                    "Skipping subscription for RecipientID %s: No EMAIL found.",
+                                    recipient_id
                                 )
                                 continue
 
-                            if subscription_type == "1":
+                            partner, contract = self._ensure_partner_and_contract(ebill_recipient_info, ebill_service)
 
-                                ebill_recipient_info = {
-                                    "email": email,
-                                    "ebill_account_id": recipient_id,
-                                    "name": " ".join(filter(None, [
-                                        line.get("GIVENNAME", "").strip(),
-                                        line.get("FAMILYNAME", "").strip(),
-                                        line.get("COMPANYNAME", "").strip(),
-                                    ])),
-                                    "street": line.get("ADDRESS", "").strip(),
-                                    "zip": line.get("ZIP", "").strip(),
-                                    "city": line.get("CITY", "").strip(),
-                                }
-
-                                try:
-                                    partner, contract = self._ensure_partner_and_contract(ebill_recipient_info, ebill_service)
-
-                                    _logger.info(
-                                        "Cron: Ensured contract (ID: %s) for partner %s (ID: %s) with EbillAccountID %s.",
-                                        contract.id, partner.email, partner.id, contract.postfinance_billerid
-                                    )
-                                except Exception as e_ensure:
-                                    _logger.warning(
-                                        "Cron: Failed to ensure partner/contract for email %s (RecipientID: %s). Error: %s",
-                                        email, recipient_id, e_ensure
-                                    )
-
-                            else:
-                                # --- End of contract ---
-                                _logger.info(
-                                    "Processing end of contract for RecipientID %s (Type: %s)",
-                                    recipient_id, subscription_type
-                                )
-
-                        except Exception as e_line:
-                            _logger.error(
-                                "eBill registration cron: Failed to process line in %s: %s. Error: %s",
-                                file.Filename, line, e_line, exc_info=True
+                            _logger.info(
+                            "Cron: Ensured contract (ID: %s) for partner %s (ID: %s) with EbillAccountID %s.",
+                            contract.id, partner.email, partner.id, contract.postfinance_billerid
+                            )
+                        else:
+                            # TODO
+                            _logger.info(
+                                "Processing end of contract for RecipientID %s (Type: %s)",
+                                recipient_id, subscription_type
                             )
 
-                except Exception as e_file:
-                    _logger.error(
-                        "eBill registration cron: Failed to read or decode file %s: %s",
-                        file.Filename, e_file, exc_info=True
-                    )
+            except Exception as e:
+                _logger.error(
+                    "eBill registration cron: Failed to get protocol file for date %s: %s",
+                    registrations.CreateDate, e, exc_info=True
+                )
+            continue
+
         _logger.info("Finished eBill registration protocol cron job.")
