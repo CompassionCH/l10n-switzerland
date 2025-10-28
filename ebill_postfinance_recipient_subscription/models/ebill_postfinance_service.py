@@ -31,62 +31,96 @@ class EbillPostfinanceService(models.Model):
         )
         return res
 
+    def _get_ebill_service_instance(self):
+        biller_id = (
+            self.env["ir.config_parameter"]
+            .sudo()
+            .get_param("ebill_postfinance.biller_id")
+        )
+        return (
+            self.env["ebill.postfinance.service"]
+            .sudo()
+            .search([("biller_id", "=", biller_id)], limit=1)
+        )
 
+    def _get_ebill_transmit_method(self):
+        return (
+            self.env["transmit.method"]
+            .sudo()
+            .search([("code", "=", "postfinance")], limit=1)
+        )
+
+    def _ensure_partner_and_contract(self, ebill_recipient_info, ebill_service):
+        email = (ebill_recipient_info.get("email") or "").strip() or None
+        ebill_account_id = (
+                            ebill_recipient_info.get("ebill_account_id") or ""
+                           ).strip() or None
+        name = ebill_recipient_info.get("name")
+        street = (ebill_recipient_info.get("street") or "").strip() or None
+        zip_code = (ebill_recipient_info.get("zip") or "").strip() or None
+        city = (ebill_recipient_info.get("city") or "").strip() or None
+
+        if not email or not ebill_account_id:
+            raise ValueError("email and ebill_account_id is required")
+
+        Partner = self.env["res.partner"].sudo()
+        Contract = self.env["ebill.payment.contract"].sudo()
+
+        partner = Partner.search([("email", "=", email)], limit=1)
+        if not partner:
+            vals = {"name": name, "email": email}
+            if street:
+                vals["street"] = street
+            if zip_code:
+                vals["zip"] = zip_code
+            if city:
+                vals["city"] = city
+            partner = Partner.create(vals)
+
+        transmit_method = self._get_ebill_transmit_method()
+
+        contract = Contract.search(
+            [
+                ("partner_id", "=", partner.id),
+                ("postfinance_billerid", "=", ebill_account_id),
+                ("postfinance_service_id", "=", ebill_service.id),
+                ("state", "=", "open"),
+            ],
+            limit=1,
+        )
+
+        if not contract:
+            contract = Contract.create(
+                {
+                    "partner_id": partner.id,
+                    "transmit_method_id": transmit_method.id,
+                    "state": "open",
+                    "postfinance_service_id": ebill_service.id,
+                    "postfinance_billerid": ebill_account_id,
+                }
+            )
+
+        return partner, contract
 
     def _cron_process_registration_protocols(self):
-        """
-        Cron job method to fetch and process eBill registration protocol files
-        from PostFinance.
-
-        This method:
-        1. Fetches the list of available registration protocol files.
-        2. Downloads each file.
-        3. Parses the file as a CSV.
-        4. For each line:
-            - If SUBSCRIPTIONTYPE is '1' (New):
-                - Finds a partner by email.
-                - If exactly one partner is found, creates a new ebill.payment.contract.
-                - Logs warnings for manual processing if zero or multiple partners are found.
-            - If SUBSCRIPTIONTYPE is not '1' (Deregistration):
-                - Finds the corresponding contract by RECIPIENTID.
-                - Sets the contract state to 'cancel' and adds an end date.
-        """
         _logger.info("Starting eBill registration protocol cron job...")
 
-        # Find the eBill service based on system parameters
-        biller_id = self.env["ir.config_parameter"].sudo().get_param("ebill_postfinance.biller_id")
-        ebill_service = self.env["ebill.postfinance.service"].sudo().search(
-            [("biller_id", "=", biller_id)], limit=1
-        )
+        ebill_service = self._get_ebill_service_instance()
 
         if not ebill_service:
-            _logger.error("eBill registration cron: No eBill service found for biller_id %s. Cron job aborted.",
-                          biller_id)
+            _logger.error("eBill registration cron: No eBill service found. Cron job aborted.")
             return
 
-        partner_obj = self.env["res.partner"].sudo()
-        contract_obj = self.env["ebill.payment.contract"].sudo()
-        transmit_method = self.env["transmit.method"].sudo().search(
-            [("code", "=", "postfinance")], limit=1
-        )
-
-        if not transmit_method:
-            _logger.error("eBill registration cron: Transmit method 'postfinance' not found. Cron job aborted.")
-            return
-
-        # Get list of protocol files
         try:
             registration_lists = ebill_service.get_registration_protocol_list()
         except Exception as e:
             _logger.error("eBill registration cron: Failed to get registration protocol list: %s", e, exc_info=True)
             return
 
-        _logger.info("Found %s registration protocol list(s) to process.", len(registration_lists))
-
         for registration_list in registration_lists:
             _logger.info("Processing registration list from %s", registration_list.CreateDate)
             try:
-                files = ebill_service.get_registration_protocol(registration_list.CreateDate)
+                files = ebill_service.get_registration_protocol_list(registration_list.CreateDate)
             except Exception as e:
                 _logger.error(
                     "eBill registration cron: Failed to get protocol file for date %s: %s",
@@ -117,58 +151,31 @@ class EbillPostfinanceService(models.Model):
                                 continue
 
                             if subscription_type == "1":
-                                # --- Create new contract ---
-                                if not email:
-                                    _logger.warning(
-                                        "Skipping subscription in %s: No EMAIL found for RECIPIENTID %s. Line: %s",
-                                        file.Filename, recipient_id, line
-                                    )
-                                    continue
 
-                                partners = partner_obj.search([("email", "=", email)])
+                                ebill_recipient_info = {
+                                    "email": email,
+                                    "ebill_account_id": recipient_id,
+                                    "name": " ".join(filter(None, [
+                                        line.get("GIVENNAME", "").strip(),
+                                        line.get("FAMILYNAME", "").strip(),
+                                        line.get("COMPANYNAME", "").strip(),
+                                    ])),
+                                    "street": line.get("ADDRESS", "").strip(),
+                                    "zip": line.get("ZIP", "").strip(),
+                                    "city": line.get("CITY", "").strip(),
+                                }
 
-                                if len(partners) == 1:
-                                    partner = partners
-                                    # Check for existing active contract to avoid duplicates
-                                    existing_contract = contract_obj.search([
-                                        ("partner_id", "=", partner.id),
-                                        ("postfinance_billerid", "=", recipient_id),
-                                        ("postfinance_service_id", "=", ebill_service.id),
-                                        ("state", "=", "open"),
-                                    ], limit=1)
+                                try:
+                                    partner, contract = self._ensure_partner_and_contract(ebill_recipient_info, ebill_service)
 
-                                    if existing_contract:
-                                        _logger.info(
-                                            "eBill contract already exists and is open for partner %s (ID: %s) and recipient ID %s. Skipping creation.",
-                                            partner.email, partner.id, recipient_id
-                                        )
-                                        continue
-
-                                    contract_vals = {
-                                        "partner_id": partner.id,
-                                        "state": "open",
-                                        "date_start": datetime.date.today(),
-                                        "transmit_method_id": transmit_method.id,
-                                        "postfinance_billerid": recipient_id,
-                                        "payment_type": "qr",  # As per your pseudo-code
-                                        "postfinance_service_id": ebill_service.id
-                                    }
-                                    contract_obj.create(contract_vals)
                                     _logger.info(
-                                        "Created eBill contract for partner %s (ID: %s) with recipient ID %s.",
-                                        partner.email, partner.id, recipient_id
+                                        "Cron: Ensured contract (ID: %s) for partner %s (ID: %s) with EbillAccountID %s.",
+                                        contract.id, partner.email, partner.id, contract.postfinance_billerid
                                     )
-
-                                elif len(partners) == 0:
+                                except Exception as e_ensure:
                                     _logger.warning(
-                                        "eBill registration cron: No partner found for email %s (RecipientID: %s). Manual processing required.",
-                                        email, recipient_id
-                                    )
-
-                                else:  # len(partners) > 1
-                                    _logger.warning(
-                                        "eBill registration cron: Multiple partners (%s) found for email %s (RecipientID: %s). Manual processing required.",
-                                        len(partners), email, recipient_id
+                                        "Cron: Failed to ensure partner/contract for email %s (RecipientID: %s). Error: %s",
+                                        email, recipient_id, e_ensure
                                     )
 
                             else:
@@ -177,29 +184,6 @@ class EbillPostfinanceService(models.Model):
                                     "Processing end of contract for RecipientID %s (Type: %s)",
                                     recipient_id, subscription_type
                                 )
-                                # Find all open contracts matching the unique eBill RecipientID
-                                contracts_to_close = contract_obj.search([
-                                    ("postfinance_billerid", "=", recipient_id),
-                                    ("postfinance_service_id", "=", ebill_service.id),
-                                    ("state", "=", "open"),
-                                ])
-
-                                if not contracts_to_close:
-                                    _logger.warning(
-                                        "eBill deregistration: No active contract found for RecipientID %s. No action taken.",
-                                        recipient_id
-                                    )
-                                    continue
-
-                                for contract in contracts_to_close:
-                                    contract.write({
-                                        "state": "cancel",  # Or 'closed' if that state exists
-                                        "date_end": datetime.date.today()
-                                    })
-                                    _logger.info(
-                                        "Closed eBill contract ID %s for partner %s (RecipientID: %s).",
-                                        contract.id, contract.partner_id.name, recipient_id
-                                    )
 
                         except Exception as e_line:
                             _logger.error(
@@ -212,5 +196,4 @@ class EbillPostfinanceService(models.Model):
                         "eBill registration cron: Failed to read or decode file %s: %s",
                         file.Filename, e_file, exc_info=True
                     )
-
         _logger.info("Finished eBill registration protocol cron job.")

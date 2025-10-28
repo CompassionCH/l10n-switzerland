@@ -21,14 +21,6 @@ def _get_ebill_service():
     )
 
 
-def _get_ebill_transmit_method():
-    return (
-        request.env["transmit.method"]
-        .sudo()
-        .search([("code", "=", "postfinance")], limit=1)
-    )
-
-
 def _render_view(is_integrated, template_xml_id, values=None):
     values = dict(values or {})
     if is_integrated:
@@ -36,59 +28,6 @@ def _render_view(is_integrated, template_xml_id, values=None):
         return request.env["ir.ui.view"]._render_template(template_xml_id, values)
     else:
         return request.render(template_xml_id, values)
-
-
-def _ensure_partner_and_contract(ebill_recipient_info, ebill_service):
-    email = (ebill_recipient_info.get("email") or "").strip() or None
-    ebill_account_id = (
-        ebill_recipient_info.get("ebill_account_id") or ""
-    ).strip() or None
-    name = ebill_recipient_info.get("name")
-    street = (ebill_recipient_info.get("street") or "").strip() or None
-    zip_code = (ebill_recipient_info.get("zip") or "").strip() or None
-    city = (ebill_recipient_info.get("city") or "").strip() or None
-
-    if not email or not ebill_account_id:
-        raise ValueError("email and ebill_account_id is required")
-
-    Partner = request.env["res.partner"].sudo()
-    Contract = request.env["ebill.payment.contract"].sudo()
-
-    partner = Partner.search([("email", "=", email)], limit=1)
-    if not partner:
-        vals = {"name": name, "email": email}
-        if street:
-            vals["street"] = street
-        if zip_code:
-            vals["zip"] = zip_code
-        if city:
-            vals["city"] = city
-        partner = Partner.create(vals)
-
-    transmit_method = _get_ebill_transmit_method()
-
-    contract = Contract.search(
-        [
-            ("partner_id", "=", partner.id),
-            ("postfinance_billerid", "=", ebill_account_id),
-            ("postfinance_service_id", "=", ebill_service.id),
-            ("state", "=", "open"),
-        ],
-        limit=1,
-    )
-
-    if not contract:
-        contract = Contract.create(
-            {
-                "partner_id": partner.id,
-                "transmit_method_id": transmit_method.id,
-                "state": "open",
-                "postfinance_service_id": ebill_service.id,
-                "postfinance_billerid": ebill_account_id,
-            }
-        )
-
-    return partner, contract
 
 
 class EbillSubscriptionController(http.Controller):
@@ -140,7 +79,7 @@ class EbillSubscriptionController(http.Controller):
                 }
 
                 try:
-                    partner, contract = _ensure_partner_and_contract(
+                    partner, contract = ebill_service._ensure_partner_and_contract(
                         ebill_recipient_info, ebill_service
                     )
                     created.append(
@@ -345,7 +284,7 @@ class EbillSubscriptionController(http.Controller):
                 "city": partner_address.get("City"),
             }
 
-            _ensure_partner_and_contract(ebill_recipient_info, ebill_service)
+            ebill_service._ensure_partner_and_contract(ebill_recipient_info, ebill_service)
 
             return _render_view(
                 is_integrated,
