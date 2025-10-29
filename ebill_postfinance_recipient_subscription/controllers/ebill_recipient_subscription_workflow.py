@@ -21,14 +21,6 @@ def _get_ebill_service():
     )
 
 
-def _get_ebill_transmit_method():
-    return (
-        request.env["transmit.method"]
-        .sudo()
-        .search([("code", "=", "postfinance")], limit=1)
-    )
-
-
 def _render_view(is_integrated, template_xml_id, values=None):
     values = dict(values or {})
     if is_integrated:
@@ -36,59 +28,6 @@ def _render_view(is_integrated, template_xml_id, values=None):
         return request.env["ir.ui.view"]._render_template(template_xml_id, values)
     else:
         return request.render(template_xml_id, values)
-
-
-def _ensure_partner_and_contract(ebill_recipient_info, ebill_service):
-    email = (ebill_recipient_info.get("email") or "").strip() or None
-    ebill_account_id = (
-        ebill_recipient_info.get("ebill_account_id") or ""
-    ).strip() or None
-    name = ebill_recipient_info.get("name")
-    street = (ebill_recipient_info.get("street") or "").strip() or None
-    zip_code = (ebill_recipient_info.get("zip") or "").strip() or None
-    city = (ebill_recipient_info.get("city") or "").strip() or None
-
-    if not email or not ebill_account_id:
-        raise ValueError("email and ebill_account_id is required")
-
-    Partner = request.env["res.partner"].sudo()
-    Contract = request.env["ebill.payment.contract"].sudo()
-
-    partner = Partner.search([("email", "=", email)], limit=1)
-    if not partner:
-        vals = {"name": name, "email": email}
-        if street:
-            vals["street"] = street
-        if zip_code:
-            vals["zip"] = zip_code
-        if city:
-            vals["city"] = city
-        partner = Partner.create(vals)
-
-    transmit_method = _get_ebill_transmit_method()
-
-    contract = Contract.search(
-        [
-            ("partner_id", "=", partner.id),
-            ("postfinance_billerid", "=", ebill_account_id),
-            ("postfinance_service_id", "=", ebill_service.id),
-            ("state", "=", "open"),
-        ],
-        limit=1,
-    )
-
-    if not contract:
-        contract = Contract.create(
-            {
-                "partner_id": partner.id,
-                "transmit_method_id": transmit_method.id,
-                "state": "open",
-                "postfinance_service_id": ebill_service.id,
-                "postfinance_billerid": ebill_account_id,
-            }
-        )
-
-    return partner, contract
 
 
 class EbillSubscriptionController(http.Controller):
@@ -140,7 +79,7 @@ class EbillSubscriptionController(http.Controller):
                 }
 
                 try:
-                    partner, contract = _ensure_partner_and_contract(
+                    partner, contract = ebill_service._ensure_partner_and_contract(
                         ebill_recipient_info, ebill_service
                     )
                     created.append(
@@ -304,7 +243,7 @@ class EbillSubscriptionController(http.Controller):
                 token, activation_code
             )
 
-            if not (partner_data and partner_data.get("eBillAccountID")):
+            if not (partner_data and partner_data.eBillAccountID):
                 _logger.warning(
                     f"eBill validation failed for token '{token}' (e.g., incorrect code)."
                 )
@@ -322,30 +261,33 @@ class EbillSubscriptionController(http.Controller):
                     },
                 )
 
-            partner_address = partner_data.get("Party", {}).get("Address", {})
-            name = (
-                " ".join(
+            party = getattr(partner_data, "Party", None)
+            partner_address = getattr(party, "Address", None)
+            name = (partner_data.eMailAddress or "").split("@", 1)[0]  # Fallback-Name
+
+            if partner_address:
+                name = " ".join(
                     filter(
                         None,
                         [
-                            (partner_address.get("GivenName") or "").strip(),
-                            (partner_address.get("LastName") or "").strip(),
+                            (partner_address.GivenName or "").strip(),
+                            (partner_address.LastName or "").strip(),
                         ],
                     )
                 )
-                or (partner_data.get("eMailAddress") or "").split("@", 1)[0]
-            )
 
             ebill_recipient_info = {
-                "email": partner_data.get("eMailAddress"),
-                "ebill_account_id": partner_data.get("eBillAccountID"),
+                "email": partner_data.eMailAddress,
+                "ebill_account_id": partner_data.eBillAccountID,
                 "name": name,
-                "street": partner_address.get("Address1"),
-                "zip": partner_address.get("ZIP"),
-                "city": partner_address.get("City"),
+                "street": partner_address.Address1 if partner_address else None,
+                "zip": partner_address.ZIP if partner_address else None,
+                "city": partner_address.City if partner_address else None,
             }
 
-            _ensure_partner_and_contract(ebill_recipient_info, ebill_service)
+            ebill_service._ensure_partner_and_contract(
+                ebill_recipient_info, ebill_service
+            )
 
             return _render_view(
                 is_integrated,
@@ -392,7 +334,8 @@ class EbillSubscriptionController(http.Controller):
             ):
                 return {"has_contract": False, "contract": None}
 
-            transmit_method = _get_ebill_transmit_method()
+            ebill_service = _get_ebill_service()
+            transmit_method = ebill_service._get_ebill_transmit_method()
             active_states = ["draft", "open", "cancel"]
             extra_domain = [("state", "in", active_states)]
             contract = partner.sudo().get_active_contract(
