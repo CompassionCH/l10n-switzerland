@@ -135,7 +135,7 @@ class EbillPostfinanceService(models.Model):
 
         ebill_service = self._get_ebill_service_instance()
 
-        registrations_lists = ebill_service.get_registration_protocol_list(True)
+        registrations_lists = ebill_service.get_registration_protocol_list()
 
         if not registrations_lists:
             _logger.info("Nothing could be find to be imported")
