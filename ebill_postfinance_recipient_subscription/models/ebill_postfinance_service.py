@@ -4,6 +4,7 @@
 import logging.config
 import csv
 import io
+import datetime
 
 from odoo import models
 
@@ -101,20 +102,56 @@ class EbillPostfinanceService(models.Model):
 
         return partner, contract
 
+    def _cancel_contract_by_recipient(self, recipient_id, ebill_service):
+        Contract = self.env["ebill.payment.contract"].sudo()
+
+        contracts_to_close = Contract.search([
+            ("postfinance_billerid", "=", recipient_id),
+            ("postfinance_service_id", "=", ebill_service.id),
+            ("state", "=", "open"),
+        ])
+
+        if not contracts_to_close:
+            _logger.warning(
+                "eBill deregistration: No active contract found for RecipientID %s. No action taken.",
+                recipient_id
+            )
+            return
+
+        for contract in contracts_to_close:
+            contract.write({
+                "state": "cancel",
+                "date_end": datetime.date.today()
+            })
+            _logger.info(
+                "Closed eBill contract ID %s for partner %s (RecipientID: %s).",
+                contract.id, contract.partner_id.name, recipient_id
+            )
+
+
     def _cron_process_registration_protocols(self):
         _logger.info("Starting eBill registration protocol cron job...")
 
         ebill_service = self._get_ebill_service_instance()
 
-        registrations_lists = ebill_service.get_registration_protocol_list()
+        registrations_lists = ebill_service.get_registration_protocol_list(True)
 
         if not registrations_lists:
             _logger.info("Nothing could be find to be imported")
             return
 
-        for registrations in registrations_lists:
+        unique_registrations = []
+        seen_keys = set()
+
+        for reg_item in registrations_lists:
+            key = (reg_item.CreateDate, reg_item.FileType)
+            if key not in seen_keys:
+                unique_registrations.append(reg_item)
+                seen_keys.add(key)
+
+        for registrations in unique_registrations:
             try:
-                files = ebill_service.get_registration_protocol(registrations.CreateDate)
+                files = ebill_service.get_registration_protocol(registrations.CreateDate, True)
                 for file in files:
                     data_bytes = file.Data
                     decoded_data = data_bytes.decode('utf-8')
@@ -147,7 +184,6 @@ class EbillPostfinanceService(models.Model):
                             }
 
                             if not email:
-                                # TODO
                                 _logger.warning(
                                     "Skipping subscription for RecipientID %s: No EMAIL found.",
                                     recipient_id
@@ -160,8 +196,9 @@ class EbillPostfinanceService(models.Model):
                             "Cron: Ensured contract (ID: %s) for partner %s (ID: %s) with EbillAccountID %s.",
                             contract.id, partner.email, partner.id, contract.postfinance_billerid
                             )
-                        else:
-                            # TODO
+
+                        elif subscription_type == "3":
+                            self._cancel_contract_by_recipient(recipient_id, ebill_service)
                             _logger.info(
                                 "Processing end of contract for RecipientID %s (Type: %s)",
                                 recipient_id, subscription_type
