@@ -261,20 +261,18 @@ class EbillSubscriptionController(http.Controller):
                     },
                 )
 
-            party = getattr(partner_data, 'Party', None)
-            partner_address = getattr(party, 'Address', None)
+            party = getattr(partner_data, "Party", None)
+            partner_address = getattr(party, "Address", None)
             name = (partner_data.eMailAddress or "").split("@", 1)[0]  # Fallback-Name
 
             if partner_address:
-                name = (
-                    " ".join(
-                        filter(
-                            None,
-                            [
-                                (partner_address.GivenName or "").strip(),
-                                (partner_address.LastName or "").strip(),
-                            ],
-                        )
+                name = " ".join(
+                    filter(
+                        None,
+                        [
+                            (partner_address.GivenName or "").strip(),
+                            (partner_address.LastName or "").strip(),
+                        ],
                     )
                 )
 
@@ -287,7 +285,9 @@ class EbillSubscriptionController(http.Controller):
                 "city": partner_address.City if partner_address else None,
             }
 
-            ebill_service._ensure_partner_and_contract(ebill_recipient_info, ebill_service)
+            ebill_service._ensure_partner_and_contract(
+                ebill_recipient_info, ebill_service
+            )
 
             return _render_view(
                 is_integrated,

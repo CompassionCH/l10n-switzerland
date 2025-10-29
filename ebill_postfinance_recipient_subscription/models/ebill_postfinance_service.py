@@ -1,10 +1,10 @@
 # Copyright 2022 Camptocamp SA
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
-import logging.config
 import csv
-import io
 import datetime
+import io
+import logging.config
 
 from odoo import models
 
@@ -53,8 +53,8 @@ class EbillPostfinanceService(models.Model):
     def _ensure_partner_and_contract(self, ebill_recipient_info, ebill_service):
         email = (ebill_recipient_info.get("email") or "").strip() or None
         ebill_account_id = (
-                            ebill_recipient_info.get("ebill_account_id") or ""
-                           ).strip() or None
+            ebill_recipient_info.get("ebill_account_id") or ""
+        ).strip() or None
         name = ebill_recipient_info.get("name")
         street = (ebill_recipient_info.get("street") or "").strip() or None
         zip_code = (ebill_recipient_info.get("zip") or "").strip() or None
@@ -105,29 +105,29 @@ class EbillPostfinanceService(models.Model):
     def _cancel_contract_by_recipient(self, recipient_id, ebill_service):
         Contract = self.env["ebill.payment.contract"].sudo()
 
-        contracts_to_close = Contract.search([
-            ("postfinance_billerid", "=", recipient_id),
-            ("postfinance_service_id", "=", ebill_service.id),
-            ("state", "=", "open"),
-        ])
+        contracts_to_close = Contract.search(
+            [
+                ("postfinance_billerid", "=", recipient_id),
+                ("postfinance_service_id", "=", ebill_service.id),
+                ("state", "=", "open"),
+            ]
+        )
 
         if not contracts_to_close:
             _logger.warning(
                 "eBill deregistration: No active contract found for RecipientID %s. No action taken.",
-                recipient_id
+                recipient_id,
             )
             return
 
         for contract in contracts_to_close:
-            contract.write({
-                "state": "cancel",
-                "date_end": datetime.date.today()
-            })
+            contract.write({"state": "cancel", "date_end": datetime.date.today()})
             _logger.info(
                 "Closed eBill contract ID %s for partner %s (RecipientID: %s).",
-                contract.id, contract.partner_id.name, recipient_id
+                contract.id,
+                contract.partner_id.name,
+                recipient_id,
             )
-
 
     def _cron_process_registration_protocols(self):
         _logger.info("Starting eBill registration protocol cron job...")
@@ -151,12 +151,14 @@ class EbillPostfinanceService(models.Model):
 
         for registrations in unique_registrations:
             try:
-                files = ebill_service.get_registration_protocol(registrations.CreateDate, True)
+                files = ebill_service.get_registration_protocol(
+                    registrations.CreateDate, True
+                )
                 for file in files:
                     data_bytes = file.Data
-                    decoded_data = data_bytes.decode('utf-8')
+                    decoded_data = data_bytes.decode("utf-8")
                     data_file = io.StringIO(decoded_data)
-                    csv_reader = csv.DictReader(data_file, delimiter=';')
+                    csv_reader = csv.DictReader(data_file, delimiter=";")
 
                     for line in csv_reader:
                         subscription_type = line.get("SUBSCRIPTIONTYPE", "").strip()
@@ -166,7 +168,8 @@ class EbillPostfinanceService(models.Model):
                         if not recipient_id:
                             _logger.warning(
                                 "Skipping line in %s: No RECIPIENTID found. Line: %s",
-                                        file.Filename, line
+                                file.Filename,
+                                line,
                             )
                             continue
 
@@ -174,10 +177,15 @@ class EbillPostfinanceService(models.Model):
                             ebill_recipient_info = {
                                 "email": email,
                                 "ebill_account_id": recipient_id,
-                                "name": " ".join(filter(None, [
-                                    line.get("GIVENNAME", "").strip(),
-                                    line.get("FAMILYNAME", "").strip(),
-                                ])),
+                                "name": " ".join(
+                                    filter(
+                                        None,
+                                        [
+                                            line.get("GIVENNAME", "").strip(),
+                                            line.get("FAMILYNAME", "").strip(),
+                                        ],
+                                    )
+                                ),
                                 "street": line.get("ADDRESS", "").strip(),
                                 "zip": line.get("ZIP", "").strip(),
                                 "city": line.get("CITY", "").strip(),
@@ -186,28 +194,38 @@ class EbillPostfinanceService(models.Model):
                             if not email:
                                 _logger.warning(
                                     "Skipping subscription for RecipientID %s: No EMAIL found.",
-                                    recipient_id
+                                    recipient_id,
                                 )
                                 continue
 
-                            partner, contract = self._ensure_partner_and_contract(ebill_recipient_info, ebill_service)
+                            partner, contract = self._ensure_partner_and_contract(
+                                ebill_recipient_info, ebill_service
+                            )
 
                             _logger.info(
-                            "Cron: Ensured contract (ID: %s) for partner %s (ID: %s) with EbillAccountID %s.",
-                            contract.id, partner.email, partner.id, contract.postfinance_billerid
+                                "Cron: Ensured contract (ID: %s) for partner %s (ID: %s) with EbillAccountID %s.",
+                                contract.id,
+                                partner.email,
+                                partner.id,
+                                contract.postfinance_billerid,
                             )
 
                         elif subscription_type == "3":
-                            self._cancel_contract_by_recipient(recipient_id, ebill_service)
+                            self._cancel_contract_by_recipient(
+                                recipient_id, ebill_service
+                            )
                             _logger.info(
                                 "Processing end of contract for RecipientID %s (Type: %s)",
-                                recipient_id, subscription_type
+                                recipient_id,
+                                subscription_type,
                             )
 
             except Exception as e:
                 _logger.error(
                     "eBill registration cron: Failed to get protocol file for date %s: %s",
-                    registrations.CreateDate, e, exc_info=True
+                    registrations.CreateDate,
+                    e,
+                    exc_info=True,
                 )
             continue
 
