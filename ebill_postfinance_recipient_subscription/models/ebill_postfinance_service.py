@@ -140,7 +140,6 @@ class EbillPostfinanceService(models.Model):
                                 "name": " ".join(filter(None, [
                                     line.get("GIVENNAME", "").strip(),
                                     line.get("FAMILYNAME", "").strip(),
-                                    line.get("COMPANYNAME", "").strip(),
                                 ])),
                                 "street": line.get("ADDRESS", "").strip(),
                                 "zip": line.get("ZIP", "").strip(),
