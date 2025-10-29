@@ -115,7 +115,8 @@ class EbillPostfinanceService(models.Model):
 
         if not contracts_to_close:
             _logger.warning(
-                "eBill deregistration: No active contract found for RecipientID %s. No action taken.",
+                "eBill deregistration: No active contract found for RecipientID %s. "
+                "No action taken.",
                 recipient_id,
             )
             return
@@ -203,7 +204,8 @@ class EbillPostfinanceService(models.Model):
                             )
 
                             _logger.info(
-                                "Cron: Ensured contract (ID: %s) for partner %s (ID: %s) with EbillAccountID %s.",
+                                "Cron: Ensured contract (ID: %s) for partner %s (ID: %s) "
+                                "with EbillAccountID %s.",
                                 contract.id,
                                 partner.email,
                                 partner.id,
