@@ -243,7 +243,7 @@ class EbillSubscriptionController(http.Controller):
                 token, activation_code
             )
 
-            if not (partner_data and partner_data.get("eBillAccountID")):
+            if not (partner_data and partner_data.eBillAccountID):
                 _logger.warning(
                     f"eBill validation failed for token '{token}' (e.g., incorrect code)."
                 )
@@ -261,27 +261,30 @@ class EbillSubscriptionController(http.Controller):
                     },
                 )
 
-            partner_address = partner_data.get("Party", {}).get("Address", {})
-            name = (
-                " ".join(
-                    filter(
-                        None,
-                        [
-                            (partner_address.get("GivenName") or "").strip(),
-                            (partner_address.get("LastName") or "").strip(),
-                        ],
+            party = getattr(partner_data, 'Party', None)
+            partner_address = getattr(party, 'Address', None)
+            name = (partner_data.eMailAddress or "").split("@", 1)[0]  # Fallback-Name
+
+            if partner_address:
+                name = (
+                    " ".join(
+                        filter(
+                            None,
+                            [
+                                (partner_address.GivenName or "").strip(),
+                                (partner_address.LastName or "").strip(),
+                            ],
+                        )
                     )
                 )
-                or (partner_data.get("eMailAddress") or "").split("@", 1)[0]
-            )
 
             ebill_recipient_info = {
-                "email": partner_data.get("eMailAddress"),
-                "ebill_account_id": partner_data.get("eBillAccountID"),
+                "email": partner_data.eMailAddress,
+                "ebill_account_id": partner_data.eBillAccountID,
                 "name": name,
-                "street": partner_address.get("Address1"),
-                "zip": partner_address.get("ZIP"),
-                "city": partner_address.get("City"),
+                "street": partner_address.Address1 if partner_address else None,
+                "zip": partner_address.ZIP if partner_address else None,
+                "city": partner_address.City if partner_address else None,
             }
 
             ebill_service._ensure_partner_and_contract(ebill_recipient_info, ebill_service)
