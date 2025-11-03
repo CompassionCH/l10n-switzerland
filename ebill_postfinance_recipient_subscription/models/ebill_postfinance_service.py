@@ -174,7 +174,7 @@ class EbillPostfinanceService(models.Model):
                             )
                             continue
 
-                        if subscription_type == "1":
+                        if subscription_type in ("1", "2"):
                             ebill_recipient_info = {
                                 "email": email,
                                 "ebill_account_id": recipient_id,
