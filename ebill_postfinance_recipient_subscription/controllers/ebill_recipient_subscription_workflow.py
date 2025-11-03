@@ -243,7 +243,7 @@ class EbillSubscriptionController(http.Controller):
                 token, activation_code
             )
 
-            if not (partner_data and partner_data.eBillAccountID):
+            if not (partner_data and partner_data.EbillAccountID):
                 _logger.warning(
                     f"eBill validation failed for token '{token}' (e.g., incorrect code)."
                 )
@@ -263,7 +263,7 @@ class EbillSubscriptionController(http.Controller):
 
             party = getattr(partner_data, "Party", None)
             partner_address = getattr(party, "Address", None)
-            name = (partner_data.eMailAddress or "").split("@", 1)[0]  # Fallback-Name
+            name = (partner_data.EmailAddress or "").split("@", 1)[0]  # Fallback-Name
 
             if partner_address:
                 name = " ".join(
@@ -271,14 +271,14 @@ class EbillSubscriptionController(http.Controller):
                         None,
                         [
                             (partner_address.GivenName or "").strip(),
-                            (partner_address.LastName or "").strip(),
+                            (partner_address.FamilyName or "").strip(),
                         ],
                     )
                 )
 
             ebill_recipient_info = {
-                "email": partner_data.eMailAddress,
-                "ebill_account_id": partner_data.eBillAccountID,
+                "email": partner_data.EmailAddress,
+                "ebill_account_id": partner_data.EbillAccountID,
                 "name": name,
                 "street": partner_address.Address1 if partner_address else None,
                 "zip": partner_address.ZIP if partner_address else None,
