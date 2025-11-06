@@ -6,8 +6,6 @@ import datetime
 import io
 import logging.config
 
-from validators import domain
-
 from odoo import models
 
 _logger = logging.getLogger(__name__)
@@ -86,14 +84,18 @@ class EbillPostfinanceService(models.Model):
         contract = partner.sudo().get_active_contract(transmit_method)
 
         if not contract:
-            contract = self.env["ebill.payment.contract"].sudo().create(
-                {
-                    "partner_id": partner.id,
-                    "transmit_method_id": transmit_method.id,
-                    "state": "open",
-                    "postfinance_service_id": ebill_service.id,
-                    "postfinance_billerid": ebill_account_id,
-                }
+            contract = (
+                self.env["ebill.payment.contract"]
+                .sudo()
+                .create(
+                    {
+                        "partner_id": partner.id,
+                        "transmit_method_id": transmit_method.id,
+                        "state": "open",
+                        "postfinance_service_id": ebill_service.id,
+                        "postfinance_billerid": ebill_account_id,
+                    }
+                )
             )
 
         return partner, contract

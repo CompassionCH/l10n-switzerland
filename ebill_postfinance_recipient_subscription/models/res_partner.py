@@ -1,5 +1,6 @@
-from odoo import models, api
 import logging
+
+from odoo import models
 
 _logger = logging.getLogger(__name__)
 
@@ -10,7 +11,9 @@ class Partner(models.Model):
     def _lookup_ebill_contract(self):
         self.ensure_one()
 
-        ebill_service = self.env["ebill.postfinance.service"]._get_ebill_service_instance()
+        ebill_service = self.env[
+            "ebill.postfinance.service"
+        ]._get_ebill_service_instance()
 
         if not self.email:
             _logger.info("Partner %s has no email for eBill lookup.", self.id)
@@ -36,9 +39,10 @@ class Partner(models.Model):
 
             allowed_recipient = next(
                 (
-                    r for r in received_recipients
+                    r
+                    for r in received_recipients
                     if getattr(r, "SubmissionStatus", None) == "ALLOWED"
-                       and r.EmailAddress.lower() == self.email.lower()
+                    and r.EmailAddress.lower() == self.email.lower()
                 ),
                 None,
             )
@@ -46,20 +50,24 @@ class Partner(models.Model):
             if not allowed_recipient:
                 _logger.info(
                     "No 'ALLOWED' eBill subscription found for partner %s (email: %s).",
-                    self.id, self.email
+                    self.id,
+                    self.email,
                 )
                 return None
 
             ebill_recipient_info = {
                 "partner_id": self.id,
-               "ebill_account_id": allowed_recipient.EbillAccountID,
+                "ebill_account_id": allowed_recipient.EbillAccountID,
             }
 
-            partner, contract  = ebill_service._ensure_partner_and_contract(ebill_recipient_info, ebill_service)
+            partner, contract = ebill_service._ensure_partner_and_contract(
+                ebill_recipient_info, ebill_service
+            )
 
             _logger.info(
                 "eBill-Subscription für Partner %s gefunden. "
-                "Gebe Infos an Controller zurück...", self.id
+                "Gebe Infos an Controller zurück...",
+                self.id,
             )
             return contract
 
