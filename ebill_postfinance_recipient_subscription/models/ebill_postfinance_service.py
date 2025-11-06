@@ -6,6 +6,8 @@ import datetime
 import io
 import logging.config
 
+from validators import domain
+
 from odoo import models
 
 _logger = logging.getLogger(__name__)
@@ -51,6 +53,7 @@ class EbillPostfinanceService(models.Model):
         )
 
     def _ensure_partner_and_contract(self, ebill_recipient_info, ebill_service):
+        partner_id = ebill_recipient_info.get("partner_id") or None
         email = (ebill_recipient_info.get("email") or "").strip() or None
         ebill_account_id = (
             ebill_recipient_info.get("ebill_account_id") or ""
@@ -60,13 +63,15 @@ class EbillPostfinanceService(models.Model):
         zip_code = (ebill_recipient_info.get("zip") or "").strip() or None
         city = (ebill_recipient_info.get("city") or "").strip() or None
 
-        if not email or not ebill_account_id:
-            raise ValueError("email and ebill_account_id is required")
+        if not (partner_id or email) or not ebill_account_id:
+            raise ValueError("partner_id or email and ebill_account_id is required")
 
-        Partner = self.env["res.partner"].sudo()
-        Contract = self.env["ebill.payment.contract"].sudo()
+        if partner_id:
+            domain = [("id", "=", partner_id)]
+        else:
+            domain = [("email", "=", email)]
 
-        partner = Partner.search([("email", "=", email)], limit=1)
+        partner = self.env["res.partner"].sudo().search(domain, limit=1)
         if not partner:
             vals = {"name": name, "email": email}
             if street:
@@ -75,22 +80,13 @@ class EbillPostfinanceService(models.Model):
                 vals["zip"] = zip_code
             if city:
                 vals["city"] = city
-            partner = Partner.create(vals)
+            partner = self.env["res.partner"].sudo().create(vals)
 
         transmit_method = self._get_ebill_transmit_method()
-
-        contract = Contract.search(
-            [
-                ("partner_id", "=", partner.id),
-                ("postfinance_billerid", "=", ebill_account_id),
-                ("postfinance_service_id", "=", ebill_service.id),
-                ("state", "=", "open"),
-            ],
-            limit=1,
-        )
+        contract = partner.sudo().get_active_contract(transmit_method)
 
         if not contract:
-            contract = Contract.create(
+            contract = self.env["ebill.payment.contract"].sudo().create(
                 {
                     "partner_id": partner.id,
                     "transmit_method_id": transmit_method.id,

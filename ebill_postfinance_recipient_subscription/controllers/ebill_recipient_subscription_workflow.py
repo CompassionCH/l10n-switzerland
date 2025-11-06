@@ -32,101 +32,6 @@ def _render_view(is_integrated, template_xml_id, values=None):
 
 class EbillSubscriptionController(http.Controller):
     @http.route(
-        "/ebill/bulk/search",
-        type="json",
-        auth="public",
-        methods=["POST"],
-        sitemap=False,
-        csrf=False,
-    )
-    def bulk_search(self, **kw):
-        try:
-            data = json.loads(request.httprequest.data)
-            recipient_ids = data.get("params", {}).get("recipient_ids")
-
-            if not isinstance(recipient_ids, list):
-                return {"error": "The param recipient_ids has to be a list."}
-
-            ebill_service = _get_ebill_service()
-            results = ebill_service.get_ebill_recipient_subscription_status_bulk(
-                recipient_ids
-            )
-
-            bill_recipients_obj = (
-                results.BillRecipients if hasattr(results, "BillRecipients") else None
-            )
-            received_recipients = (
-                bill_recipients_obj.BillRecipient
-                if (
-                    bill_recipients_obj
-                    and hasattr(bill_recipients_obj, "BillRecipient")
-                )
-                else []
-            )
-
-            allowed_recipients = [
-                r
-                for r in received_recipients
-                if getattr(r, "SubmissionStatus", None) == "ALLOWED"
-            ]
-
-            created, errors = [], []
-
-            for recipient in allowed_recipients:
-                ebill_recipient_info = {
-                    "email": recipient.EmailAddress,
-                    "ebill_account_id": recipient.EbillAccountID,
-                }
-
-                try:
-                    partner, contract = ebill_service._ensure_partner_and_contract(
-                        ebill_recipient_info, ebill_service
-                    )
-                    created.append(
-                        {
-                            "partner_id": partner.id,
-                            "email": partner.email,
-                            "contract_id": contract.id,
-                            "EbillAccountID": contract.postfinance_billerid,
-                        }
-                    )
-                except Exception as e:
-                    _logger.error(
-                        "Create partner/contract failed for email %s: %s",
-                        ebill_recipient_info.get("email"),
-                        e,
-                        exc_info=True,
-                    )
-                    errors.append(
-                        {"email": ebill_recipient_info.get("email"), "error": str(e)}
-                    )
-
-            return {
-                "summary": {
-                    "total_requested": len(recipient_ids),
-                    "created": len(created),
-                    "errors": len(errors),
-                },
-                "created": created,
-                "errors": errors,
-            }
-
-        except Exception as e:
-            if "Missing element SubmissionStatus" in str(e):
-                _logger.warning(
-                    "No ebill recipient found for the given IDs (service raised exception)."
-                )
-                return {
-                    "error": "No ebill recipient was found for the provided recipient_ids."
-                }
-            else:
-                _logger.error(
-                    f"Unexpected Exception during bulk search occurred: {e}",
-                    exc_info=True,
-                )
-                return {"error": "An internal server error occurred."}
-
-    @http.route(
         "/ebill/subscribe",
         type="http",
         auth="public",
@@ -336,23 +241,20 @@ class EbillSubscriptionController(http.Controller):
 
             ebill_service = _get_ebill_service()
             transmit_method = ebill_service._get_ebill_transmit_method()
-            active_states = ["draft", "open", "cancel"]
-            extra_domain = [("state", "in", active_states)]
-            contract = partner.sudo().get_active_contract(
-                transmit_method, domain=extra_domain
-            )
+            contract = partner.sudo().get_active_contract(transmit_method)
 
             if not contract:
-                return {
-                    "has_contract": False,
-                    "contract": None,
-                    "partner": {
-                        "id": partner.id,
-                        "name": partner.name,
-                        "email": partner.email,
-                    },
-                }
-
+                contract = partner._lookup_ebill_contract()
+                if not contract:
+                    return {
+                        "has_contract": False,
+                        "contract": None,
+                        "partner": {
+                            "id": partner.id,
+                            "name": partner.name,
+                            "email": partner.email,
+                        },
+                    }
             return {
                 "has_contract": True,
                 "partner": {
