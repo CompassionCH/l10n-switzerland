@@ -86,7 +86,7 @@
                     data-action="/ebill/validate"
                     formaction="/ebill/validate"
                     formnovalidate="formnovalidate"
-                >Resend validation code</button>
+                >Resend code</button>
                     <button
                     type="submit"
                     data-action="/ebill/confirm"
