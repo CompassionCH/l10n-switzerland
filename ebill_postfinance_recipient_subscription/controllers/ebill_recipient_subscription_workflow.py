@@ -41,12 +41,6 @@ class EbillSubscriptionController(http.Controller):
     def subscribe(self, is_integrated=False, **kw):
         email = kw.get("email")
 
-        if not email:
-            return _render_view(
-                is_integrated,
-                "ebill_postfinance_recipient_subscription.subscribe_template",
-            )
-
         normalized_email = email_normalize(email)
         if not normalized_email:
             return _render_view(
@@ -87,52 +81,6 @@ class EbillSubscriptionController(http.Controller):
         methods=["POST"],
         sitemap=False,
     )
-    def validate(self, is_integrated=False, **post):
-        email = post.get("email")
-
-        normalized_email = email_normalize(email)
-        if not normalized_email:
-            return _render_view(
-                is_integrated,
-                "ebill_postfinance_recipient_subscription.subscribe_template",
-                {"submitted_email": email},
-            )
-
-        try:
-            ebill_service = _get_ebill_service()
-            token_sub = ebill_service.initiate_ebill_recipient_subscription(email)
-
-            return _render_view(
-                is_integrated,
-                "ebill_postfinance_recipient_subscription.validate_template",
-                {
-                    "token": token_sub.SubscriptionInitiationToken,
-                    "email": email,
-                },
-            )
-
-        except Exception as e:
-            _logger.error(
-                f"Error during the eBill confirmation process for mail '{email}': {e}",
-                exc_info=True,
-            )
-
-            return _render_view(
-                is_integrated,
-                "ebill_postfinance_recipient_subscription.retry_template",
-                {
-                    "email": email,
-                },
-            )
-
-    @http.route(
-        "/ebill/confirm",
-        type="http",
-        auth="public",
-        website=True,
-        methods=["POST"],
-        sitemap=False,
-    )
     def confirm(self, is_integrated=False, **post):
         token = post.get("token")
         activation_code = post.get("validation_code")
@@ -164,7 +112,7 @@ class EbillSubscriptionController(http.Controller):
 
             party = getattr(partner_data, "Party", None)
             partner_address = getattr(party, "Address", None)
-            name = (partner_data.EmailAddress or "").split("@", 1)[0]  # Fallback-Name
+            name = (partner_data.EmailAddress or "").split("@", 1)[0]  # fallback name
 
             if partner_address:
                 name = " ".join(

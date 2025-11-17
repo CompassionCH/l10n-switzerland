@@ -6,7 +6,7 @@
             <div t-if="error" class="alert alert-danger" role="alert">
                 <t t-esc="error" />
             </div>
-            <form action="/ebill/validate" method="post">
+            <form action="/ebill/subscribe" method="post">
                 <div class="mb-3">
                     <label for="email_input" class="form-label">E-Mail-Adresse:</label>
                     <input
@@ -23,7 +23,7 @@
                     <button
                     type="submit"
                     class="btn btn-primary"
-                    data-action="/ebill/validate"
+                    data-action="/ebill/subscribe"
                 >Request validation code</button>
                 </div>
             </form>
@@ -61,7 +61,7 @@
             <div t-if="error" class="alert alert-danger" role="alert">
                 <t t-esc="error" />
             </div>
-            <form action="/ebill/confirm" method="post">
+            <form action="/ebill/validate" method="post">
                 <input id="token" type="hidden" name="token" t-att-value="token" />
                 <input id="email" type="hidden" name="email" t-att-value="email" />
                 <div class="mb-3">
@@ -83,13 +83,13 @@
                     t-if="error"
                     type="submit"
                     class="btn btn-secondary mr-2"
-                    data-action="/ebill/validate"
-                    formaction="/ebill/validate"
+                    data-action="/ebill/subscribe"
+                    formaction="/ebill/subscribe"
                     formnovalidate="formnovalidate"
                 >Resend code</button>
                     <button
                     type="submit"
-                    data-action="/ebill/confirm"
+                    data-action="/ebill/validate"
                     class="btn btn-primary"
                 >Confirm</button>
                 </div>
