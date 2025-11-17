@@ -65,8 +65,8 @@ class Partner(models.Model):
             )
 
             _logger.info(
-                "eBill-Subscription für Partner %s gefunden. "
-                "Gebe Infos an Controller zurück...",
+                "eBill subscription found for partner %s. "
+                "Returning info to controller...",
                 self.id,
             )
             return contract
