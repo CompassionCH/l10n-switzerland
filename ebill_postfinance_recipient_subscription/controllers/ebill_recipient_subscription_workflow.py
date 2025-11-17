@@ -37,7 +37,6 @@ class EbillSubscriptionController(http.Controller):
         website=True,
         methods=["GET", "POST"],
         sitemap=False,
-        csrf=False,
     )
     def subscribe(self, is_integrated=False, **kw):
         email = kw.get("email")
@@ -87,7 +86,6 @@ class EbillSubscriptionController(http.Controller):
         website=True,
         methods=["POST"],
         sitemap=False,
-        csrf=False,
     )
     def validate(self, is_integrated=False, **post):
         email = post.get("email")
@@ -134,7 +132,6 @@ class EbillSubscriptionController(http.Controller):
         website=True,
         methods=["POST"],
         sitemap=False,
-        csrf=False,
     )
     def confirm(self, is_integrated=False, **post):
         token = post.get("token")
@@ -224,7 +221,6 @@ class EbillSubscriptionController(http.Controller):
         "/ebill/current-user/contract",
         type="json",
         auth="user",
-        csrf=False,
         methods=["POST"],
         sitemap=False,
     )
