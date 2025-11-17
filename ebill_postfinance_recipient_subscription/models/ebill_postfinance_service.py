@@ -4,7 +4,7 @@
 import csv
 import datetime
 import io
-import logging.config
+import logging
 
 from odoo import models
 
