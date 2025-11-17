@@ -61,7 +61,7 @@ class Partner(models.Model):
             }
 
             partner, contract = ebill_service._ensure_partner_and_contract(
-                ebill_recipient_info, ebill_service
+                ebill_recipient_info
             )
 
             _logger.info(

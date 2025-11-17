@@ -186,9 +186,7 @@ class EbillSubscriptionController(http.Controller):
                 "city": partner_address.City if partner_address else None,
             }
 
-            ebill_service._ensure_partner_and_contract(
-                ebill_recipient_info, ebill_service
-            )
+            ebill_service._ensure_partner_and_contract(ebill_recipient_info)
 
             return _render_view(
                 is_integrated,

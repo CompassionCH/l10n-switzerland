@@ -50,7 +50,7 @@ class EbillPostfinanceService(models.Model):
             .search([("code", "=", "postfinance")], limit=1)
         )
 
-    def _ensure_partner_and_contract(self, ebill_recipient_info, ebill_service):
+    def _ensure_partner_and_contract(self, ebill_recipient_info):
         partner_id = ebill_recipient_info.get("partner_id") or None
         email = (ebill_recipient_info.get("email") or "").strip() or None
         ebill_account_id = (
@@ -92,7 +92,7 @@ class EbillPostfinanceService(models.Model):
                         "partner_id": partner.id,
                         "transmit_method_id": transmit_method.id,
                         "state": "open",
-                        "postfinance_service_id": ebill_service.id,
+                        "postfinance_service_id": self.id,
                         "postfinance_billerid": ebill_account_id,
                     }
                 )
@@ -100,13 +100,13 @@ class EbillPostfinanceService(models.Model):
 
         return partner, contract
 
-    def _cancel_contract_by_recipient(self, recipient_id, ebill_service):
+    def _cancel_contract_by_recipient(self, recipient_id):
         Contract = self.env["ebill.payment.contract"].sudo()
 
         contracts_to_close = Contract.search(
             [
                 ("postfinance_billerid", "=", recipient_id),
-                ("postfinance_service_id", "=", ebill_service.id),
+                ("postfinance_service_id", "=", self.id),
                 ("state", "=", "open"),
             ]
         )
@@ -131,9 +131,7 @@ class EbillPostfinanceService(models.Model):
     def _cron_process_registration_protocols(self):
         _logger.info("Starting eBill registration protocol cron job...")
 
-        ebill_service = self._get_ebill_service_instance()
-
-        registrations_lists = ebill_service.get_registration_protocol_list()
+        registrations_lists = self.get_registration_protocol_list()
 
         if not registrations_lists:
             _logger.info("Nothing could be find to be imported")
@@ -150,7 +148,7 @@ class EbillPostfinanceService(models.Model):
 
         for registrations in unique_registrations:
             try:
-                files = ebill_service.get_registration_protocol(
+                files = self.get_registration_protocol(
                     registrations.CreateDate, True
                 )
                 for file in files:
@@ -198,7 +196,7 @@ class EbillPostfinanceService(models.Model):
                                 continue
 
                             partner, contract = self._ensure_partner_and_contract(
-                                ebill_recipient_info, ebill_service
+                                ebill_recipient_info
                             )
 
                             _logger.info(
@@ -212,7 +210,7 @@ class EbillPostfinanceService(models.Model):
 
                         elif subscription_type == "3":
                             self._cancel_contract_by_recipient(
-                                recipient_id, ebill_service
+                                recipient_id
                             )
                             _logger.info(
                                 "Processing end of contract for RecipientID %s (Type: %s)",
