@@ -148,10 +148,10 @@ class EbillPostfinanceService(models.Model):
                     unique_registrations.append(reg_item)
                     seen_keys.add(key)
 
-            for registrations in unique_registrations:
+            for registration in unique_registrations:
                 try:
                     files = ebill_service.get_registration_protocol(
-                        registrations.CreateDate, True
+                        registration.CreateDate, True
                     )
                     for file in files:
                         data_bytes = file.Data
@@ -226,7 +226,7 @@ class EbillPostfinanceService(models.Model):
                 except Exception as e:
                     _logger.error(
                         "eBill registration cron: Failed to get protocol file for date %s: %s",
-                        registrations.CreateDate,
+                        registration.CreateDate,
                         e,
                         exc_info=True,
                     )
