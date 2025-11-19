@@ -25,17 +25,8 @@ class Partner(models.Model):
                 recipient_ids
             )
 
-            bill_recipients_obj = (
-                results.BillRecipients if hasattr(results, "BillRecipients") else None
-            )
-            received_recipients = (
-                bill_recipients_obj.BillRecipient
-                if (
-                    bill_recipients_obj
-                    and hasattr(bill_recipients_obj, "BillRecipient")
-                )
-                else []
-            )
+            bill_recipients_obj = getattr(results, "BillRecipients", None)
+            received_recipients = getattr(bill_recipients_obj, "BillRecipient", [])
 
             allowed_recipient = next(
                 (
@@ -73,7 +64,8 @@ class Partner(models.Model):
 
         except Exception as e:
             _logger.error(
-                f"Unexpected Exception during bulk search occurred: {e}",
+                "Unexpected Exception during bulk search occurred: %s",
+                e,
                 exc_info=True,
             )
             return None

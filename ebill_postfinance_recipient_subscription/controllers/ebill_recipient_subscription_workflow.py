@@ -7,19 +7,6 @@ from odoo.tools import email_normalize
 _logger = logging.getLogger(__name__)
 
 
-def _get_ebill_service():
-    biller_id = (
-        request.env["ir.config_parameter"]
-        .sudo()
-        .get_param("ebill_postfinance.biller_id")
-    )
-    return (
-        request.env["ebill.postfinance.service"]
-        .sudo()
-        .search([("biller_id", "=", biller_id)], limit=1)
-    )
-
-
 def _render_view(is_integrated, template_xml_id, values=None):
     values = dict(values or {})
     if is_integrated:
@@ -50,7 +37,7 @@ class EbillSubscriptionController(http.Controller):
             )
 
         try:
-            ebill_service = _get_ebill_service()
+            ebill_service = request.env['ebill.postfinance.service']._get_ebill_service_instance()
             token_sub = ebill_service.initiate_ebill_recipient_subscription(email)
 
             return _render_view(
@@ -64,8 +51,9 @@ class EbillSubscriptionController(http.Controller):
 
         except Exception:
             _logger.warning(
-                f"Failed to initiate eBill subscription for email '{email}'.",
-                exc_info=True,
+                "Failed to initiate eBill subscription for email '%s'.",
+                email,
+                exc_info=True
             )
             return _render_view(
                 is_integrated,
@@ -85,7 +73,7 @@ class EbillSubscriptionController(http.Controller):
         token = post.get("token")
         activation_code = post.get("validation_code")
         email = post.get("email")
-        ebill_service = _get_ebill_service()
+        ebill_service = request.env['ebill.postfinance.service']._get_ebill_service_instance()
 
         try:
             partner_data = ebill_service.confirm_ebill_recipient_subscription(
@@ -112,7 +100,7 @@ class EbillSubscriptionController(http.Controller):
 
             party = getattr(partner_data, "Party", None)
             partner_address = getattr(party, "Address", None)
-            name = (partner_data.EmailAddress or "").split("@", 1)[0]  # fallback name
+            name = (partner_data.EmailAddress or "").split("@", 1)[0] or partner_data.EmailAddress  # fallback name
 
             if partner_address:
                 name = " ".join(
@@ -180,7 +168,7 @@ class EbillSubscriptionController(http.Controller):
             ):
                 return {"has_contract": False, "contract": None}
 
-            ebill_service = _get_ebill_service()
+            ebill_service = request.env['ebill.postfinance.service']._get_ebill_service_instance()
             transmit_method = ebill_service._get_ebill_transmit_method()
             contract = partner.sudo().get_active_contract(transmit_method)
 
