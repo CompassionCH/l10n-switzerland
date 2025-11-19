@@ -6,7 +6,7 @@ import datetime
 import io
 import logging
 
-from odoo import models
+from odoo import api, models
 
 _logger = logging.getLogger(__name__)
 
@@ -30,18 +30,6 @@ class EbillPostfinanceService(models.Model):
             initiation_token, activation_code
         )
         return res
-
-    def _get_ebill_service_instance(self):
-        biller_id = (
-            self.env["ir.config_parameter"]
-            .sudo()
-            .get_param("ebill_postfinance.biller_id")
-        )
-        return (
-            self.env["ebill.postfinance.service"]
-            .sudo()
-            .search([("biller_id", "=", biller_id)], limit=1)
-        )
 
     def _get_ebill_transmit_method(self):
         return (
@@ -128,6 +116,7 @@ class EbillPostfinanceService(models.Model):
                 recipient_id,
             )
 
+    @api.model
     def _cron_process_registration_protocols(self):
         _logger.info("Starting eBill registration protocol cron job...")
 
@@ -239,3 +228,16 @@ class EbillPostfinanceService(models.Model):
             )
 
         _logger.info("Finished eBill registration protocol cron job.")
+
+    @api.model
+    def _get_ebill_service_instance(self):
+        biller_id = (
+            self.env["ir.config_parameter"]
+            .sudo()
+            .get_param("ebill_postfinance.biller_id")
+        )
+        return (
+            self.env["ebill.postfinance.service"]
+            .sudo()
+            .search([("biller_id", "=", biller_id)], limit=1)
+        )
