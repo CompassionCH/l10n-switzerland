@@ -20,7 +20,7 @@
                     id="email_input"
                     class="form-control"
                     required="1"
-                    t-att-value="submitted_email"
+                    t-att-value="submitted_email or None"
                     placeholder="mail@example.com"
                 />
                 </div>
