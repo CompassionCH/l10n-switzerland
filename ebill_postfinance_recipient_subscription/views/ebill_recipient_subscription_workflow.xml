@@ -13,7 +13,7 @@
                     name="csrf_token"
                     t-att-value="request.csrf_token()"
                 />
-                    <label for="email_input" class="form-label">E-Mail-Adresse:</label>
+                    <label for="email_input" class="form-label">Email Address:</label>
                     <input
                     type="email"
                     name="email"
@@ -170,7 +170,7 @@
         </t>
     </template>
 
-    <template id="success_template_content" name="E-Bill Retry Content">
+    <template id="success_template_content" name="E-Bill Success Content">
              <h1 class="mb-4 mt-0">Thank you!</h1>
              <p>You have successfully subscribed to E-Bill.</p>
              <div id="ebill-success-marker" data-ebill-success="1" />
