@@ -72,14 +72,8 @@ class Partner(models.Model):
             return contract
 
         except Exception as e:
-            if "Missing element SubmissionStatus" in str(e):
-                _logger.warning(
-                    "No ebill recipient found for the given IDs (service raised exception)."
-                )
-                return None
-            else:
-                _logger.error(
-                    f"Unexpected Exception during bulk search occurred: {e}",
-                    exc_info=True,
-                )
+            _logger.error(
+                f"Unexpected Exception during bulk search occurred: {e}",
+                exc_info=True,
+            )
             return None
