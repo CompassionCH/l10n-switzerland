@@ -312,7 +312,8 @@ class EbillPostfinanceInvoiceMessage(models.Model):
         date_due = None
         if self.invoice_id.invoice_payment_term_id:
             terms = self.invoice_id.invoice_payment_term_id.compute(
-                self.invoice_id.amount_total
+                value=self.invoice_id.amount_total,
+                date_ref=self.invoice_id.invoice_date
             )
             if terms:
                 # Get the last payment date
