@@ -1,5 +1,5 @@
 # generated from manifests external_dependencies
-ebilling_postfinance
+git+https://github.com/CompassionCH/ebilling-postfinance.git@5816d0033c31cfa022cee33a8627fa68dd5eea25#egg=ebilling_postfinance
 openupgradelib
 quickpac
 unidecode

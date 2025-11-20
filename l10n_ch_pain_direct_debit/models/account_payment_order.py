@@ -19,11 +19,13 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
-from lxml import etree
 import re
+
+from lxml import etree
+
 from odoo import api, fields, models
 from odoo.exceptions import UserError
-from odoo.tools import float_round,mod10r
+from odoo.tools import float_round, mod10r
 
 ACCEPTED_PAIN_FLAVOURS = ("pain.008.001.02.ch.03",)
 
@@ -202,9 +204,9 @@ class AccountPaymentOrder(models.Model):
             party_agent_clearing_identification = etree.SubElement(
                 party_agent_clearing, "MmbId"
             )
-            party_agent_clearing_identification.text = (
-                partner_bank.acc_number.replace(" ", "")[4:9]
-            )
+            party_agent_clearing_identification.text = partner_bank.acc_number.replace(
+                " ", ""
+            )[4:9]
             ccp_other = etree.SubElement(party_agent_institution, "Othr")
             ccp_other_id = etree.SubElement(ccp_other, "Id")
             ref_subparts = self.company_partner_bank_id.l10n_ch_postal.split("-")
@@ -373,7 +375,6 @@ class AccountPaymentOrder(models.Model):
             )
             ori_debtor_agent_institution_clearing_identification.text = (
                 line.partner_bank_id.acc_number.replace(" ", "")[4:9]
-
             )
 
             # .../  <Dbtr>
@@ -397,9 +398,13 @@ class AccountPaymentOrder(models.Model):
         if line.payment_line_ids[:1].local_instrument == "LSV+":
             remittance_info = etree.SubElement(parent_node, "RmtInf")
             remittance_info_unstructured = etree.SubElement(remittance_info, "Ustrd")
+
+            base_path = "line.payment_line_ids[0].move_line_id.move_id"
+            field_path = f"{base_path}.ref or {base_path}.name"
+
             remittance_info_unstructured.text = self._prepare_field(
                 "Remittance Unstructured Information",
-                "line.payment_line_ids[0].move_line_id.move_id.ref or line.payment_line_ids[0].move_line_id.move_id.name",
+                field_path,
                 {"line": line},
                 140,
                 gen_args=gen_args,
@@ -418,13 +423,13 @@ class AccountPaymentOrder(models.Model):
             creditor_ref_info_type_code.text = "ESR"
             creditor_reference = etree.SubElement(creditor_ref_information, "Ref")
             ref = line.payment_line_ids[0].communication
-            if re.match(r'^(\d{2,27})$', ref):
+            if re.match(r"^(\d{2,27})$", ref):
                 if ref == mod10r(ref[:-1]):
                     creditor_reference.text = ref
                 else:
-                    raise UserError(ref + ': control digit failed (QRR or ESR)')
+                    raise UserError(ref + ": control digit failed (QRR or ESR)")
             else:
-                raise UserError(ref + ' is not QRR or ESR ref')
+                raise UserError(ref + " is not QRR or ESR ref")
         else:
             super().generate_remittance_info_block(parent_node, line, gen_args)
 

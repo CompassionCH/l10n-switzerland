@@ -3,10 +3,10 @@
 
 from lxml import etree
 
-from odoo import _, api, models
-from odoo.exceptions import UserError
+from odoo import api, models
 
 ACCEPTED_PAIN_FLAVOURS = ("pain.001.001.03.ch.02", "pain.008.001.02.ch.03")
+
 
 class AccountPaymentOrder(models.Model):
     _inherit = "account.payment.order"
@@ -27,14 +27,13 @@ class AccountPaymentOrder(models.Model):
         pain_flavor = self.payment_mode_id.payment_method_id.pain_version
         if pain_flavor in ACCEPTED_PAIN_FLAVOURS:
             attrib = {
-            "{http://www.w3.org/2001/XMLSchema-instance}"
-            "schemaLocation": "http://www.six-interbank-clearing.com/de/%s.xsd  %s.xsd"
-                              % (pain_flavor, pain_flavor)
+                "{http://www.w3.org/2001/XMLSchema-instance}"
+                "schemaLocation": "http://www.six-interbank-clearing.com/de/%s.xsd  %s.xsd"
+                % (pain_flavor, pain_flavor)
             }
             return attrib
         else:
             return super().generate_pain_attrib()
-
 
     @api.model
     def generate_remittance_info_block(self, parent_node, line, gen_args):
@@ -54,8 +53,11 @@ class AccountPaymentOrder(models.Model):
             creditor_ref_info_type_code.text = "QRR"
             creditor_reference = etree.SubElement(creditor_ref_information, "Ref")
             creditor_reference.text = line.payment_line_ids[0].communication
-            # to uncomment when schema pain.001.001.09.ch.03 is implemented in account_banking_pain_base
+            # to uncomment when schema pain.001.001.09.ch.03
+            # is implemented in account_banking_pain_base
             # remittance_info_structured = etree.SubElement(remittance_info, "AddtlRmtInf")
-            # remittance_info_structured.text = line.payment_line_ids[0].move_line_id.move_id.ref or ""
+            # remittance_info_structured.text = (
+            #     line.payment_line_ids[0].move_line_id.move_id.ref or ""
+            # )
         else:
             super().generate_remittance_info_block(parent_node, line, gen_args)

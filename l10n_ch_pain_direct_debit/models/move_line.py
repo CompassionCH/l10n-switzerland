@@ -31,7 +31,10 @@ class AccountMoveLine(models.Model):
         if payment_order.payment_method_id.pain_version == "pain.008.001.02.ch.03":
             vals["communication"] = self.move_id.payment_reference.replace(" ", "")
         if payment_order.payment_type == "inbound":
-            if payment_order.company_partner_bank_id.acc_number.replace(" ", "")[5:9] == "9000":
+            if (
+                payment_order.company_partner_bank_id.acc_number.replace(" ", "")[5:9]
+                == "9000"
+            ):
                 # Force correct values for Postfinance
                 vals.update(
                     {"local_instrument": "DDCOR1", "communication_type": "normal"}
