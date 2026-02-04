@@ -1,6 +1,8 @@
 # Copyright 2024 Compassion CH
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html)
 
+from types import SimpleNamespace
+
 from lxml import etree
 
 from odoo.tests.common import TransactionCase
@@ -261,10 +263,9 @@ class TestAccountPaymentOrder(TransactionCase):
         )
 
         # Create a mock payment line group
-        line_group = type(
-            "obj",
-            (object,),
-            {"payment_line_ids": [payment_line], "move_line_id": payment_line.move_line_id},
+        line_group = SimpleNamespace(
+            payment_line_ids=[payment_line],
+            move_line_id=payment_line.move_line_id,
         )
 
         # Test the remittance info block generation
@@ -358,10 +359,8 @@ class TestAccountPaymentOrder(TransactionCase):
         )
 
         # Create a mock payment line group
-        line_group = type(
-            "obj",
-            (object,),
-            {"payment_line_ids": [payment_line]},
+        line_group = SimpleNamespace(
+            payment_line_ids=[payment_line],
         )
 
         # Test the remittance info block generation - should call super
