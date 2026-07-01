@@ -209,7 +209,7 @@ class AccountPaymentOrder(models.Model):
             )[4:9]
             ccp_other = etree.SubElement(party_agent_institution, "Othr")
             ccp_other_id = etree.SubElement(ccp_other, "Id")
-            ref_subparts = self.company_partner_bank_id.l10n_ch_postal.split("-")
+            ref_subparts = self.company_partner_bank_id.l10n_ch_postal.split("-") # TODO NiP : this is deprecated as of Odoo 17, see how to adapt
             ccp_other_id.text = (
                 ref_subparts[0] + ref_subparts[1].rjust(6, "0") + ref_subparts[2]
             )
@@ -540,7 +540,7 @@ class AccountPaymentOrder(models.Model):
 
         # It sets the check sum, <CtrlSum>
         ctrl_sum = float_round(
-            sum(payment.amount_total for payment in self.payment_ids), 2
+            sum(payment.move_id.amount_total for payment in self.payment_ids), 2
         )
         control_sum_a.text = str(ctrl_sum)
 
