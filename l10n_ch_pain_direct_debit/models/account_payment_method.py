@@ -20,4 +20,4 @@ class AccountPaymentMethod(models.Model):
         if pain_version == "pain.008.001.02.ch.03":
             path = "l10n_ch_pain_direct_debit/data/%s.xsd" % pain_version
             return path
-        return super(AccountPaymentMethod, self).get_xsd_file_path()
+        return super().get_xsd_file_path()
