@@ -177,7 +177,7 @@ class AccountPaymentOrder(models.Model):
     ):
         if gen_args.get("pain_flavor") in ACCEPTED_PAIN_FLAVOURS:
             # <CdtrAcct>
-            party_account = etree.SubElement(parent_node, "%sAcct" % party_type)
+            party_account = etree.SubElement(parent_node, f"{party_type}Acct")
             party_account_id = etree.SubElement(party_account, "Id")
             party_account_iban = etree.SubElement(party_account_id, "IBAN")
             party_account_iban.text = partner_bank.acc_number.replace(" ", "")
@@ -194,7 +194,7 @@ class AccountPaymentOrder(models.Model):
         self, parent_node, party_type, order, partner_bank, gen_args, bank_line=None
     ):
         if gen_args.get("pain_flavor") in ACCEPTED_PAIN_FLAVOURS:
-            party_agent = etree.SubElement(parent_node, "%sAgt" % party_type)
+            party_agent = etree.SubElement(parent_node, f"{party_type}Agt")
             party_agent_institution = etree.SubElement(party_agent, "FinInstnId")
 
             # <CdtrAgt>/<FinInstnId>/  <ClrSysMmbId>
@@ -242,7 +242,7 @@ class AccountPaymentOrder(models.Model):
             name = "partner_bank.partner_id.name"
             eval_ctx = {"partner_bank": partner_bank}
             party_name = self._prepare_field(
-                "%s Name" % party_type_label,
+                f"{party_type_label} Name", # TODO NiP : add default value for party_type_label ?
                 name,
                 eval_ctx,
                 gen_args.get("name_maxsize"),
@@ -358,7 +358,7 @@ class AccountPaymentOrder(models.Model):
             instructed_amount = etree.SubElement(
                 dd_transaction_info, "InstdAmt", Ccy=currency_name
             )
-            instructed_amount.text = "%.2f" % line.amount_total
+            instructed_amount.text = f"{line.amount_total:.2f}"
 
             # .../  <DbtrAgt>
             ori_debtor_agent = etree.SubElement(dd_transaction_info, "DbtrAgt")
