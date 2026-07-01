@@ -231,7 +231,6 @@ class AccountPaymentOrder(models.Model):
         generate_party_block().
         """
         if gen_args.get("pain_flavor") in ACCEPTED_PAIN_FLAVOURS:
-
             # <Cdtr>
             party = etree.SubElement(parent_node, party_type)
 
@@ -327,7 +326,6 @@ class AccountPaymentOrder(models.Model):
         for pain.008.001.03.ch.01.
         """
         for line in lines:
-
             dd_transaction_info = etree.SubElement(parent_node, "DrctDbtTxInf")
             payment_identification = etree.SubElement(dd_transaction_info, "PmtId")
             instruction_identification = etree.SubElement(
