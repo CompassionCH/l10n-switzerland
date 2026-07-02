@@ -15,7 +15,6 @@ History
 07.05.2015  V02  initial version for Swiss Direct Debit, targetNamespace="http://www.iso-payments.ch/std/iso20022/ch/pain.008.001.02.ch.02.xsd"  File:pain.008.001.02.ch.02.xsd
 30.11.2015  V03  Element CdtrAgt/Othr zugelassen, targetNamespace="http://www.iso-payments.ch/std/iso20022/ch/pain.008.001.02.ch.03.xsd"  File:pain.008.001.02.ch.03.xsd
 -->
-
 <xs:schema xmlns="http://www.six-interbank-clearing.com/de/pain.008.001.02.ch.03.xsd" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.six-interbank-clearing.com/de/pain.008.001.02.ch.03.xsd" elementFormDefault="qualified">
 	<xs:element name="Document" type="Document_CH_pain008"/>
 	<xs:complexType name="AccountIdentification4Choice">
