@@ -28,6 +28,7 @@ from odoo.exceptions import UserError
 from odoo.tools import float_round, mod10r
 
 ACCEPTED_PAIN_FLAVOURS = ("pain.008.001.02.ch.03",)
+SIX_BANK_URL = "http://www.six-interbank-clearing.com/de"
 
 
 class AccountPaymentOrder(models.Model):
@@ -57,10 +58,10 @@ class AccountPaymentOrder(models.Model):
     def generate_pain_attrib(self):
         self.ensure_one()
         pain_flavor = self.payment_mode_id.payment_method_id.pain_version
-        if pain_flavor == "pain.008.001.02.ch.03":
+        if pain_flavor in ACCEPTED_PAIN_FLAVOURS:
             attrib = {
                 "{http://www.w3.org/2001/XMLSchema-instance}"
-                "schemaLocation": "http://www.six-interbank-clearing.com/de/pain.008.001.02.ch.03.xsd pain.008.001.02.ch.03.xsd"
+                "schemaLocation": f"{SIX_BANK_URL}/{pain_flavor}.xsd {pain_flavor}.xsd"
             }
             return attrib
         else:
@@ -70,13 +71,12 @@ class AccountPaymentOrder(models.Model):
         self.ensure_one()
         nsmap = super().generate_pain_nsmap()
         pain_flavor = self.payment_mode_id.payment_method_id.pain_version
-        if pain_flavor == "pain.008.001.02.ch.03":
+        if pain_flavor in ACCEPTED_PAIN_FLAVOURS:
             nsmap = {
                 "xsi": "http://www.w3.org/2001/XMLSchema-instance",
-                None: "http://www.six-interbank-clearing.com/de/pain.008.001.02.ch.03.xsd",
+                None: f"{SIX_BANK_URL}/{pain_flavor}.xsd",
             }
         return nsmap
-
 
     @api.model
     def _must_have_initiating_party(self, gen_args):
@@ -260,7 +260,7 @@ class AccountPaymentOrder(models.Model):
             name = "partner_bank.partner_id.name"
             eval_ctx = {"partner_bank": partner_bank}
             party_name = self._prepare_field(
-                f"{party_type_label} Name", # TODO NiP : add default value for party_type_label ?
+                f"{party_type_label} Name",
                 name,
                 eval_ctx,
                 gen_args.get("name_maxsize"),
@@ -376,7 +376,7 @@ class AccountPaymentOrder(models.Model):
             instructed_amount = etree.SubElement(
                 dd_transaction_info, "InstdAmt", Ccy=currency_name
             )
-            instructed_amount.text = f"{line.move_id.amount_total:.2f}" # Could also do line.amount...
+            instructed_amount.text = f"{line.move_id.amount_total:.2f}"
 
             # .../  <DbtrAgt>
             ori_debtor_agent = etree.SubElement(dd_transaction_info, "DbtrAgt")
@@ -442,12 +442,13 @@ class AccountPaymentOrder(models.Model):
             if re.match(r"^(\d{2,27})$", ref):
                 if ref == mod10r(ref[:-1]):
                     creditor_reference.text = ref
+                    return True
                 else:
                     raise UserError(ref + ": control digit failed (QRR or ESR)")
             else:
                 raise UserError(ref + " is not QRR or ESR ref")
         else:
-            super().generate_remittance_info_block(parent_node, line, gen_args)
+            return super().generate_remittance_info_block(parent_node, line, gen_args)
 
     def generate_xml_ch_dd_file(self):
         self.ensure_one()
