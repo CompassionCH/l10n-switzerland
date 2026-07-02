@@ -207,12 +207,6 @@ class AccountPaymentOrder(models.Model):
             party_agent_clearing_identification.text = partner_bank.acc_number.replace(
                 " ", ""
             )[4:9]
-            ccp_other = etree.SubElement(party_agent_institution, "Othr")
-            ccp_other_id = etree.SubElement(ccp_other, "Id")
-            ref_subparts = self.company_partner_bank_id.l10n_ch_postal.split("-") # TODO NiP : this is deprecated as of Odoo 17, see how to adapt
-            ccp_other_id.text = (
-                ref_subparts[0] + ref_subparts[1].rjust(6, "0") + ref_subparts[2]
-            )
 
             res = True
         else:
