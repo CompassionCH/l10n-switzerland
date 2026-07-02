@@ -54,6 +54,17 @@ class AccountPaymentOrder(models.Model):
 
         return res
 
+    def generate_pain_nsmap(self):
+        self.ensure_one()
+        nsmap = super().generate_pain_nsmap()
+        pain_flavor = self.payment_mode_id.payment_method_id.pain_version
+        if pain_flavor == "pain.008.001.02.ch.03":
+            nsmap = {
+                "xsi": "http://www.w3.org/2001/XMLSchema-instance",
+                None: "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
+            }
+        return nsmap
+
     @api.model
     def _must_have_initiating_party(self, gen_args):
         if gen_args.get("pain_flavor") in ACCEPTED_PAIN_FLAVOURS:
@@ -352,7 +363,7 @@ class AccountPaymentOrder(models.Model):
             instructed_amount = etree.SubElement(
                 dd_transaction_info, "InstdAmt", Ccy=currency_name
             )
-            instructed_amount.text = f"{line.amount_total:.2f}"
+            instructed_amount.text = f"{line.move_id.amount_total:.2f}" # Could also do line.amount...
 
             # .../  <DbtrAgt>
             ori_debtor_agent = etree.SubElement(dd_transaction_info, "DbtrAgt")
