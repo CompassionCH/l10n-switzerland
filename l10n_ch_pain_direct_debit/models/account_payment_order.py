@@ -54,6 +54,18 @@ class AccountPaymentOrder(models.Model):
 
         return res
 
+    def generate_pain_attrib(self):
+        self.ensure_one()
+        pain_flavor = self.payment_mode_id.payment_method_id.pain_version
+        if pain_flavor == "pain.008.001.02.ch.03":
+            attrib = {
+                "{http://www.w3.org/2001/XMLSchema-instance}"
+                "schemaLocation": "http://www.six-interbank-clearing.com/de/pain.008.001.02.ch.03.xsd pain.008.001.02.ch.03.xsd"
+            }
+            return attrib
+        else:
+            return super().generate_pain_attrib()
+
     def generate_pain_nsmap(self):
         self.ensure_one()
         nsmap = super().generate_pain_nsmap()
@@ -61,9 +73,10 @@ class AccountPaymentOrder(models.Model):
         if pain_flavor == "pain.008.001.02.ch.03":
             nsmap = {
                 "xsi": "http://www.w3.org/2001/XMLSchema-instance",
-                None: "urn:iso:std:iso:20022:tech:xsd:pain.008.001.02",
+                None: "http://www.six-interbank-clearing.com/de/pain.008.001.02.ch.03.xsd",
             }
         return nsmap
+
 
     @api.model
     def _must_have_initiating_party(self, gen_args):
