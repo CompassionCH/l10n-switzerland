@@ -398,12 +398,6 @@ class AccountPaymentOrder(models.Model):
                 dd_transaction_info, "Dbtr", "C", line.partner_bank_id, gen_args, line
             )
 
-            # .../  <DbtrAcct>
-            dbtr_acct = etree.Element("DbtrAcct")
-            dbtr_acct_id = etree.SubElement(dbtr_acct, "Id")
-            dbtr_acct_iban = etree.SubElement(dbtr_acct_id, "IBAN")
-            dbtr_acct_iban.text = partner_bank.acc_number.replace(" ", "")
-
             # .../  <RmtInf>
             self.generate_remittance_info_block(dd_transaction_info, line, gen_args)
 
