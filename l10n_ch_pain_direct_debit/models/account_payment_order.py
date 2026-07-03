@@ -438,15 +438,15 @@ class AccountPaymentOrder(models.Model):
             )
             creditor_ref_info_type_code.text = "ESR"
             creditor_reference = etree.SubElement(creditor_ref_information, "Ref")
-            ref = line.payment_line_ids[0].communication
+            ref = line.payment_line_ids[0].communication or ""
             if re.match(r"^(\d{2,27})$", ref):
                 if ref == mod10r(ref[:-1]):
                     creditor_reference.text = ref
                     return True
                 else:
-                    raise UserError(ref + ": control digit failed (QRR or ESR)")
+                    raise UserError(f"{ref}: control digit failed (QRR or ESR)")
             else:
-                raise UserError(ref + " is not QRR or ESR ref")
+                raise UserError(f"{ref} is not QRR or ESR ref")
         else:
             return super().generate_remittance_info_block(parent_node, line, gen_args)
 
