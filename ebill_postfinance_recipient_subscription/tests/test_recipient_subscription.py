@@ -19,6 +19,9 @@ SERVICE_LOGGER = (
     "odoo.addons.ebill_postfinance_recipient_subscription.models"
     ".ebill_postfinance_service"
 )
+PARTNER_LOGGER = (
+    "odoo.addons.ebill_postfinance_recipient_subscription.models.res_partner"
+)
 
 
 def protocol_file(name, rows):
@@ -91,7 +94,7 @@ class TestEnsurePartnerAndContract(RecipientSubscriptionCommon):
         with self.assertRaises(ValueError):
             self.service._ensure_partner_and_contract({"ebill_account_id": "EB-X"})
 
-    @mute_logger(CONTRACT_LOGGER)
+    @mute_logger(CONTRACT_LOGGER, SERVICE_LOGGER)
     def test_cancel_contract_by_recipient(self):
         _, contract = self.service._ensure_partner_and_contract(
             {
@@ -109,7 +112,7 @@ class TestEnsurePartnerAndContract(RecipientSubscriptionCommon):
 
 
 class TestRegistrationProtocolCron(RecipientSubscriptionCommon):
-    @mute_logger(CONTRACT_LOGGER)
+    @mute_logger(CONTRACT_LOGGER, SERVICE_LOGGER)
     def test_processes_files_and_skips_empty_ones(self):
         _, contract = self.service._ensure_partner_and_contract(
             {
@@ -213,7 +216,8 @@ class TestLookupEbillContract(RecipientSubscriptionCommon):
             "ebill_postfinance.biller_id", "NO-MATCH"
         )
         with mock.patch.object(BaseService, "_get_service") as get_service:
-            result = self.partner._lookup_ebill_contract()
+            with self.assertLogs(PARTNER_LOGGER, level="WARNING"):
+                result = self.partner._lookup_ebill_contract()
         get_service.assert_not_called()
         self.assertIsNone(result)
 
