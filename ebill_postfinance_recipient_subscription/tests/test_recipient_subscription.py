@@ -7,12 +7,18 @@ from types import SimpleNamespace
 from unittest import mock
 
 from odoo.tests.common import HttpCase, TransactionCase, tagged
+from odoo.tools import mute_logger
 
 from odoo.addons.ebill_postfinance.models.ebill_postfinance_service import (
     EbillPostfinanceService as BaseService,
 )
 
 CSV_HEADER = "SUBSCRIPTIONTYPE;EMAIL;RECIPIENTID;GIVENNAME;FAMILYNAME;ADDRESS;ZIP;CITY"
+CONTRACT_LOGGER = "odoo.addons.base_ebill_payment_contract.models.res_partner"
+SERVICE_LOGGER = (
+    "odoo.addons.ebill_postfinance_recipient_subscription.models"
+    ".ebill_postfinance_service"
+)
 
 
 def protocol_file(name, rows):
@@ -47,6 +53,7 @@ class RecipientSubscriptionCommon(TransactionCase):
 
 
 class TestEnsurePartnerAndContract(RecipientSubscriptionCommon):
+    @mute_logger(CONTRACT_LOGGER)
     def test_creates_partner_and_contract(self):
         partner, contract = self.service._ensure_partner_and_contract(
             {
@@ -66,6 +73,7 @@ class TestEnsurePartnerAndContract(RecipientSubscriptionCommon):
         self.assertEqual(contract.postfinance_service_id, self.service)
         self.assertEqual(contract.transmit_method_id, self.transmit_method)
 
+    @mute_logger(CONTRACT_LOGGER)
     def test_is_idempotent(self):
         info = {
             "email": "repeat@example.com",
@@ -83,6 +91,7 @@ class TestEnsurePartnerAndContract(RecipientSubscriptionCommon):
         with self.assertRaises(ValueError):
             self.service._ensure_partner_and_contract({"ebill_account_id": "EB-X"})
 
+    @mute_logger(CONTRACT_LOGGER)
     def test_cancel_contract_by_recipient(self):
         _, contract = self.service._ensure_partner_and_contract(
             {
@@ -100,6 +109,7 @@ class TestEnsurePartnerAndContract(RecipientSubscriptionCommon):
 
 
 class TestRegistrationProtocolCron(RecipientSubscriptionCommon):
+    @mute_logger(CONTRACT_LOGGER)
     def test_processes_files_and_skips_empty_ones(self):
         _, contract = self.service._ensure_partner_and_contract(
             {
@@ -143,7 +153,10 @@ class TestRegistrationProtocolCron(RecipientSubscriptionCommon):
         )
         partners_before = self.env["res.partner"].search_count([])
         with mock.patch.object(BaseService, "_get_service") as get_service:
-            self.env["ebill.postfinance.service"]._cron_process_registration_protocols()
+            with self.assertLogs(SERVICE_LOGGER, level="ERROR"):
+                self.env[
+                    "ebill.postfinance.service"
+                ]._cron_process_registration_protocols()
         get_service.assert_not_called()
         self.assertEqual(self.env["res.partner"].search_count([]), partners_before)
 
@@ -156,6 +169,7 @@ class TestLookupEbillContract(RecipientSubscriptionCommon):
             {"name": "Known Donor", "email": "known@example.com"}
         )
 
+    @mute_logger(CONTRACT_LOGGER)
     def test_allowed_recipient_yields_contract(self):
         fake = mock.Mock()
         fake.get_ebill_recipient_subscription_status_bulk.return_value = bulk_response(
@@ -174,6 +188,7 @@ class TestLookupEbillContract(RecipientSubscriptionCommon):
         self.assertEqual(contract.partner_id, self.partner)
         self.assertEqual(contract.postfinance_billerid, "EB-KNOWN")
 
+    @mute_logger(CONTRACT_LOGGER)
     def test_recipient_without_email_attribute_is_skipped(self):
         # the entry without EmailAddress comes FIRST: without the getattr
         # guard it raises inside the generator and no contract is ever found
@@ -235,6 +250,7 @@ class TestSubscriptionWorkflowHttp(HttpCase):
         self.assertIn('id="email_input"', fragment.text)
         self.assertNotIn("</html>", fragment.text)
 
+    @mute_logger(CONTRACT_LOGGER)
     def test_confirm_falls_back_to_email_local_part_for_blank_names(self):
         page = self.url_open("/ebill/subscribe")
         csrf = re.search(r'name="csrf_token" value="([^"]+)"', page.text).group(1)

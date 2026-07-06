@@ -41,7 +41,7 @@ class Partner(models.Model):
                     r
                     for r in received_recipients
                     if getattr(r, "SubmissionStatus", None) == "ALLOWED"
-                    and (getattr(r, "EmailAddress", "") or "").lower()
+                    and (getattr(r, "EmailAddress", None) or "").lower()
                     == self.email.lower()
                 ),
                 None,
