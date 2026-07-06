@@ -110,7 +110,7 @@ class EbillSubscriptionController(http.Controller):
             ] or partner_data.EmailAddress  # fallback name
 
             if partner_address:
-                name = " ".join(
+                address_name = " ".join(
                     filter(
                         None,
                         [
@@ -119,6 +119,8 @@ class EbillSubscriptionController(http.Controller):
                         ],
                     )
                 )
+                if address_name:
+                    name = address_name
 
             ebill_recipient_info = {
                 "email": partner_data.EmailAddress,

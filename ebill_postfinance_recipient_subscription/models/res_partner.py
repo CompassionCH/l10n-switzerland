@@ -15,6 +15,14 @@ class Partner(models.Model):
             "ebill.postfinance.service"
         ]._get_ebill_service_instance()
 
+        if not ebill_service:
+            _logger.warning(
+                "No eBill PostFinance service configured; skipping eBill "
+                "lookup for partner %s.",
+                self.id,
+            )
+            return None
+
         if not self.email:
             _logger.info("Partner %s has no email for eBill lookup.", self.id)
             return None
@@ -33,7 +41,8 @@ class Partner(models.Model):
                     r
                     for r in received_recipients
                     if getattr(r, "SubmissionStatus", None) == "ALLOWED"
-                    and r.EmailAddress.lower() == self.email.lower()
+                    and (getattr(r, "EmailAddress", "") or "").lower()
+                    == self.email.lower()
                 ),
                 None,
             )

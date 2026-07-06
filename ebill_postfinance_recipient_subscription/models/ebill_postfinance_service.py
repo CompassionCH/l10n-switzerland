@@ -122,6 +122,12 @@ class EbillPostfinanceService(models.Model):
 
         try:
             ebill_service = self._get_ebill_service_instance()
+            if not ebill_service:
+                _logger.error(
+                    "No eBill PostFinance service matches the configured "
+                    "'ebill_postfinance.biller_id' parameter; aborting."
+                )
+                return
             registrations_lists = ebill_service.get_registration_protocol_list(True)
 
             if not registrations_lists:
@@ -144,6 +150,13 @@ class EbillPostfinanceService(models.Model):
                     )
                     for file in files:
                         data_bytes = file.Data
+                        if not data_bytes:
+                            _logger.warning(
+                                "Skipping empty protocol file %s for date %s.",
+                                getattr(file, "Filename", "unknown"),
+                                registration.CreateDate,
+                            )
+                            continue
                         decoded_data = data_bytes.decode("utf-8")
                         data_file = io.StringIO(decoded_data)
                         csv_reader = csv.DictReader(data_file, delimiter=";")
