@@ -18,3 +18,6 @@
     "data": ["views/account_payment_method.xml"],
     "installable": True,
 }
+
+
+blblblblbl
