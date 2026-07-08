@@ -90,6 +90,7 @@ class TestAccountMoveLine(TransactionCase):
         cls.partner = cls.env["res.partner"].create(
             {
                 "name": "Test Partner",
+                "country_id": cls.env.ref("base.ch").id,
             }
         )
 
@@ -132,7 +133,7 @@ class TestAccountMoveLine(TransactionCase):
         # Get the move line
         move_line = move.line_ids.filtered(
             lambda line: line.account_id == self.account
-        )[0]
+        ).ensure_one()
 
         # Call the method
         vals = move_line._prepare_payment_line_vals(self.payment_order)
@@ -183,7 +184,7 @@ class TestAccountMoveLine(TransactionCase):
         # Get the move line
         move_line = move.line_ids.filtered(
             lambda line: line.account_id == self.account
-        )[0]
+        ).ensure_one()
 
         # Call the method
         vals = move_line._prepare_payment_line_vals(self.payment_order)
@@ -219,7 +220,7 @@ class TestAccountMoveLine(TransactionCase):
         # Get the move line
         move_line = move.line_ids.filtered(
             lambda line: line.account_id == self.account
-        )[0]
+        ).ensure_one()
 
         # Call the method
         vals = move_line._prepare_payment_line_vals(self.payment_order)
