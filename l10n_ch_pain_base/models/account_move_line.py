@@ -14,12 +14,13 @@ class AccountMoveLine(models.Model):
             {
                 "payment_type": "outbound",
                 "partner_id": self.move_id.partner_id,
+                "partner_bank_id": self.move_id.partner_bank_id,
                 "memo": vals["communication"],
             }
         )
         if (
             self.move_id
-            and self.move_id.partner_bank_id.l10n_ch_qr_iban
+            and payment.partner_bank_id.l10n_ch_qr_iban
             and payment._l10n_ch_reference_is_valid(vals["communication"])
             and not payment.l10n_ch_reference_warning_msg
         ):
