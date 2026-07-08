@@ -94,13 +94,14 @@
         </SalaryDeclaration>
     </template>
 
-    <report
+    <record
         id="salary_declaration_report"
-        name="l10n_ch_hr_payroll_ecertificate.salary_declaration_xml_view"
-        string="Salary certificate xml report"
-        report_type="qweb-xml"
-        print_report_name="'Yearly certificate report'"
-        file="report_xml.xml"
-        model="hr.salary.declaration"
-    />
+        model="ir.actions.report">
+        <field name="name">Salary certificate xml report</field>
+        <field name="report_type">qweb-xml</field>
+        <field name="report_name">l10n_ch_hr_payroll_ecertificate.salary_declaration_xml_view</field>
+        <field name="print_report_name">'Yearly certificate report'</field>
+        <field name="report_file">report_xml.xml</field>
+        <field name="model">hr.salary.declaration</field>
+    </record>
 </odoo>
