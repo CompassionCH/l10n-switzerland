@@ -16,14 +16,21 @@ Switzerland - export for electronic certificate
 .. |badge2| image:: https://img.shields.io/badge/licence-AGPL--3-blue.png
     :target: http://www.gnu.org/licenses/agpl-3.0-standalone.html
     :alt: License: AGPL-3
-.. |badge3| image:: https://img.shields.io/badge/github-CompassionCH%2Fl10n--switzerland-lightgray.png?logo=github
-    :target: https://github.com/CompassionCH/l10n-switzerland/tree/14.0/l10n_ch_hr_payroll_ecertificate
-    :alt: CompassionCH/l10n-switzerland
+.. |badge3| image:: https://img.shields.io/badge/github-OCA%2Fl10n--switzerland-lightgray.png?logo=github
+    :target: https://github.com/OCA/l10n-switzerland/tree/18.0/l10n_ch_hr_payroll_ecertificate
+    :alt: OCA/l10n-switzerland
+.. |badge4| image:: https://img.shields.io/badge/weblate-Translate%20me-F47D42.png
+    :target: https://translation.odoo-community.org/projects/l10n-switzerland-18-0/l10n-switzerland-18-0-l10n_ch_hr_payroll_ecertificate
+    :alt: Translate me on Weblate
+.. |badge5| image:: https://img.shields.io/badge/runboat-Try%20me-875A7B.png
+    :target: https://runboat.odoo-community.org/builds?repo=OCA/l10n-switzerland&target_branch=18.0
+    :alt: Try me on Runboat
 
-|badge1| |badge2| |badge3|
+|badge1| |badge2| |badge3| |badge4| |badge5|
 
-This module extends the functionality of hr and payroll
-to allow you to extract payroll of the employees to import them in the swiss certificate platform <https://www.elohnausweis-ssk.ch/fr/#/>
+This module extends the functionality of hr and payroll to allow you to
+extract payroll of the employees to import them in the swiss certificate
+platform <https://www.elohnausweis-ssk.ch/fr/#/>
 
 **Table of contents**
 
@@ -35,31 +42,30 @@ Usage
 
 To use this module, you need to:
 
-#. Go to payroll
-
-#. Use the wizard to generate the salary declaration XML file
+1. Go to payroll
+2. Use the wizard to generate the salary declaration XML file
 
 Known issues / Roadmap
 ======================
 
-
-* Directly connect odoo to an API that could generate the final PDF file.
+- Directly connect odoo to an API that could generate the final PDF
+  file.
 
 Changelog
 =========
 
 14.0.1.0.0 (01.06.23)
-~~~~~~~~~~~~~~~~~~~~~~~
+---------------------
 
-* [MIG] Migrate to version 14.
+- [MIG] Migrate to version 14.
 
 Bug Tracker
 ===========
 
-Bugs are tracked on `GitHub Issues <https://github.com/CompassionCH/l10n-switzerland/issues>`_.
+Bugs are tracked on `GitHub Issues <https://github.com/OCA/l10n-switzerland/issues>`_.
 In case of trouble, please check there if your issue has already been reported.
 If you spotted it first, help us to smash it by providing a detailed and welcomed
-`feedback <https://github.com/CompassionCH/l10n-switzerland/issues/new?body=module:%20l10n_ch_hr_payroll_ecertificate%0Aversion:%2014.0%0A%0A**Steps%20to%20reproduce**%0A-%20...%0A%0A**Current%20behavior**%0A%0A**Expected%20behavior**>`_.
+`feedback <https://github.com/OCA/l10n-switzerland/issues/new?body=module:%20l10n_ch_hr_payroll_ecertificate%0Aversion:%2018.0%0A%0A**Steps%20to%20reproduce**%0A-%20...%0A%0A**Current%20behavior**%0A%0A**Expected%20behavior**>`_.
 
 Do not contact contributors directly about support or help with technical issues.
 
@@ -67,13 +73,23 @@ Credits
 =======
 
 Contributors
-~~~~~~~~~~~~
+------------
 
-* Simon Gonzalez <simon.gonzalez@bluewin.ch>
+- Simon Gonzalez <simon.gonzalez@bluewin.ch>
 
 Maintainers
-~~~~~~~~~~~
+-----------
 
-This module is part of the `CompassionCH/l10n-switzerland <https://github.com/CompassionCH/l10n-switzerland/tree/14.0/l10n_ch_hr_payroll_ecertificate>`_ project on GitHub.
+This module is maintained by the OCA.
 
-You are welcome to contribute.
+.. image:: https://odoo-community.org/logo.png
+   :alt: Odoo Community Association
+   :target: https://odoo-community.org
+
+OCA, or the Odoo Community Association, is a nonprofit organization whose
+mission is to support the collaborative development of Odoo features and
+promote its widespread use.
+
+This module is part of the `OCA/l10n-switzerland <https://github.com/OCA/l10n-switzerland/tree/18.0/l10n_ch_hr_payroll_ecertificate>`_ project on GitHub.
+
+You are welcome to contribute. To learn how please visit https://odoo-community.org/page/Contribute.
