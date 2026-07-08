@@ -1,6 +1,6 @@
 {
     "name": "E-Bill PostFinance Recipient Subscription",
-    "version": "18.0.1.0.2",
+    "version": "18.0.1.0.1",
     "category": "Finance",
     "summary": "Module for e-bill recipient subscription "
     "via PostFinance website workflow.",
