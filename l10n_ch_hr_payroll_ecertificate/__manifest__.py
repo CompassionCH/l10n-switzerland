@@ -7,7 +7,7 @@
     "category": "Localization",
     "author": "Odoo Community Association (OCA)",
     "depends": ["report_xml", "hr", "payroll"],
-    "version": "14.0.1.0.0",
+    "version": "18.0.1.0.0",
     "auto_install": False,
     "demo": [],
     "website": "https://github.com/OCA/l10n-switzerland",
