@@ -65,6 +65,8 @@ class HrSalaryDeclaration(models.Model):
             ):
                 d_to[line.employee_id.id] = line.slip_id.date_to.strftime("%Y-%m-%d")
         _logger.info("generating '%s' salary declaration", len(employee_ids))
+
+        salary_declarations = []
         for emp in employee_ids:
             sd_vals = {
                 "employee_id": emp,
@@ -77,4 +79,6 @@ class HrSalaryDeclaration(models.Model):
                 "bvg_lpp_ded": math.ceil(bvg_lpp_ded[emp]),
                 "year": date_to.strftime("%Y-%m-%d")[:4],
             }
-            self.create(sd_vals)
+            salary_declarations.append(sd_vals)
+
+        self.create(salary_declarations)
