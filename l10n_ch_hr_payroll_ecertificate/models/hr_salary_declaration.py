@@ -35,7 +35,7 @@ class HrSalaryDeclaration(models.Model):
                 ("slip_id.state", "=", "done"),
             ]
         )
-        employee_ids = payslip_lines.mapped("employee_id.id")
+        employee_ids = payslip_lines.employee_id.ids
         grossincome = defaultdict(float)
         companycar = defaultdict(float)
         social_ded = defaultdict(float)
