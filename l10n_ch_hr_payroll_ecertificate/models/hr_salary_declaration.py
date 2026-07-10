@@ -40,30 +40,25 @@ class HrSalaryDeclaration(models.Model):
         companycar = defaultdict(float)
         social_ded = defaultdict(float)
         bvg_lpp_ded = defaultdict(float)
-        d_from = defaultdict(str)
-        d_to = defaultdict(str)
+        d_from = {}
+        d_to = {}
         for line in payslip_lines:
+            emp_id = line.employee_id.id
             if line.salary_rule_id == gross_income:
-                grossincome[line.employee_id.id] += line.total
-            if line.salary_rule_id == lpp_bvg:
-                bvg_lpp_ded[line.employee_id.id] -= line.total
-            if line.salary_rule_id == deduction:
-                social_ded[line.employee_id.id] -= line.total
-            if line.salary_rule_id == company_car:
-                companycar[line.employee_id.id] -= line.total
-            if (
-                line.slip_id.date_from.strftime("%Y-%m-%d")
-                < d_from[line.employee_id.id]
-                or not d_from[line.employee_id.id]
-            ):
-                d_from[line.employee_id.id] = line.slip_id.date_from.strftime(
-                    "%Y-%m-%d"
-                )
-            if (
-                line.slip_id.date_to.strftime("%Y-%m-%d") > d_to[line.employee_id.id]
-                or not d_to[line.employee_id.id]
-            ):
-                d_to[line.employee_id.id] = line.slip_id.date_to.strftime("%Y-%m-%d")
+                grossincome[emp_id] += line.total
+            elif line.salary_rule_id == lpp_bvg:
+                bvg_lpp_ded[emp_id] -= line.total
+            elif line.salary_rule_id == deduction:
+                social_ded[emp_id] -= line.total
+            elif line.salary_rule_id == company_car:
+                companycar[emp_id] -= line.total
+
+            slip_date_from = line.slip_id.date_from
+            slip_date_to = line.slip_id.date_to
+            if emp_id not in d_from or slip_date_from < d_from[emp_id]:
+                d_from[emp_id] = slip_date_from
+            if emp_id not in d_to or slip_date_to > d_to[emp_id]:
+                d_to[emp_id] = slip_date_to
         _logger.info("generating '%s' salary declaration", len(employee_ids))
 
         salary_declarations = []
