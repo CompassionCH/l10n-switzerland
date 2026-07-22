@@ -351,7 +351,7 @@ class AccountPaymentOrder(models.Model):
             )
             instruction_identification.text = self._prepare_field(
                 "Intruction Identification",
-                "str(line.move_id.id)",
+                "str(line.id)",
                 {"line": line},
                 35,
                 gen_args=gen_args,
@@ -361,7 +361,7 @@ class AccountPaymentOrder(models.Model):
             )
             end2end_identification.text = self._prepare_field(
                 "End to End Identification",
-                "str(line.move_id.id)",
+                "str(line.id)",
                 {"line": line},
                 35,
                 gen_args=gen_args,
@@ -376,7 +376,7 @@ class AccountPaymentOrder(models.Model):
             instructed_amount = etree.SubElement(
                 dd_transaction_info, "InstdAmt", Ccy=currency_name
             )
-            instructed_amount.text = f"{line.move_id.amount_total:.2f}"
+            instructed_amount.text = f"{line.amount:.2f}"
 
             # .../  <DbtrAgt>
             ori_debtor_agent = etree.SubElement(dd_transaction_info, "DbtrAgt")
@@ -553,7 +553,7 @@ class AccountPaymentOrder(models.Model):
 
         # It sets the check sum, <CtrlSum>
         ctrl_sum = float_round(
-            sum(payment.move_id.amount_total for payment in self.payment_ids), 2
+            sum(payment.amount for payment in self.payment_ids), 2
         )
         control_sum_a.text = str(ctrl_sum)
 
