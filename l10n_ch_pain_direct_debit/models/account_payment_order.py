@@ -552,9 +552,7 @@ class AccountPaymentOrder(models.Model):
         nb_of_transactions_a.text = str(len(self.payment_ids))
 
         # It sets the check sum, <CtrlSum>
-        ctrl_sum = float_round(
-            sum(payment.amount for payment in self.payment_ids), 2
-        )
+        ctrl_sum = float_round(sum(payment.amount for payment in self.payment_ids), 2)
         control_sum_a.text = str(ctrl_sum)
 
         return self.finalize_sepa_file_creation(xml_root, gen_args)
