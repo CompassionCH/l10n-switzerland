@@ -40,7 +40,9 @@ class EbillSubscriptionController(http.Controller):
             )
 
         try:
-            ebill_service = request.env['ebill.postfinance.service']._get_ebill_service_instance()
+            ebill_service = request.env[
+                "ebill.postfinance.service"
+            ]._get_ebill_service_instance()
             token_sub = ebill_service.initiate_ebill_recipient_subscription(email)
 
             return _render_view(
@@ -56,7 +58,7 @@ class EbillSubscriptionController(http.Controller):
             _logger.warning(
                 "Failed to initiate eBill subscription for email '%s'.",
                 email,
-                exc_info=True
+                exc_info=True,
             )
             return _render_view(
                 is_integrated,
@@ -112,7 +114,9 @@ class EbillSubscriptionController(http.Controller):
 
             party = getattr(partner_data, "Party", None)
             partner_address = getattr(party, "Address", None)
-            name = (partner_data.EmailAddress or "").split("@", 1)[0] or partner_data.EmailAddress  # fallback name
+            name = (partner_data.EmailAddress or "").split("@", 1)[
+                0
+            ] or partner_data.EmailAddress  # fallback name
 
             if partner_address:
                 name = " ".join(
@@ -180,7 +184,9 @@ class EbillSubscriptionController(http.Controller):
             ):
                 return {"has_contract": False, "contract": None}
 
-            ebill_service = request.env['ebill.postfinance.service']._get_ebill_service_instance()
+            ebill_service = request.env[
+                "ebill.postfinance.service"
+            ]._get_ebill_service_instance()
             transmit_method = ebill_service._get_ebill_transmit_method()
             contract = partner.sudo().get_active_contract(transmit_method)
 

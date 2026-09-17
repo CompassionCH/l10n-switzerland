@@ -182,7 +182,8 @@ class EbillPostfinanceService(models.Model):
 
                                 if not email:
                                     _logger.warning(
-                                        "Skipping subscription for RecipientID %s: No EMAIL found.",
+                                        "Skipping subscription for RecipientID "
+                                        "%s: No EMAIL found.",
                                         recipient_id,
                                     )
                                     continue
