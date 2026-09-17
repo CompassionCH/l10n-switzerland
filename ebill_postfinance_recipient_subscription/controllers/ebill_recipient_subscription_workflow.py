@@ -31,7 +31,7 @@ class EbillSubscriptionController(http.Controller):
         normalized_email = email_normalize(email)
         if not normalized_email:
             values = {"submitted_email": email}
-            if request.httprequest.method == "POST":
+            if email:
                 values["error"] = _("Please enter a valid email address.")
             return _render_view(
                 is_integrated,
