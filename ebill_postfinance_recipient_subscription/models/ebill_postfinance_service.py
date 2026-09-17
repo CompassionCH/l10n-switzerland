@@ -6,7 +6,8 @@ import datetime
 import io
 import logging
 
-from odoo import api, models
+from odoo import _, api, models
+from odoo.exceptions import UserError
 
 _logger = logging.getLogger(__name__)
 
@@ -236,8 +237,16 @@ class EbillPostfinanceService(models.Model):
             .sudo()
             .get_param("ebill_postfinance.biller_id")
         )
-        return (
+        service = (
             self.env["ebill.postfinance.service"]
             .sudo()
             .search([("biller_id", "=", biller_id)], limit=1)
         )
+        if not service:
+            _logger.error(
+                "No ebill.postfinance.service found for biller_id %r "
+                "(system parameter 'ebill_postfinance.biller_id').",
+                biller_id,
+            )
+            raise UserError(_("The eBill service is not configured."))
+        return service

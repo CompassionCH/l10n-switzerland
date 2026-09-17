@@ -1,6 +1,6 @@
 import logging
 
-from odoo import http
+from odoo import _, http
 from odoo.http import request
 from odoo.tools import email_normalize
 
@@ -30,10 +30,13 @@ class EbillSubscriptionController(http.Controller):
 
         normalized_email = email_normalize(email)
         if not normalized_email:
+            values = {"submitted_email": email}
+            if request.httprequest.method == "POST":
+                values["error"] = _("Please enter a valid email address.")
             return _render_view(
                 is_integrated,
                 "ebill_postfinance_recipient_subscription.subscribe_template",
-                {"submitted_email": email},
+                values,
             )
 
         try:
@@ -58,7 +61,14 @@ class EbillSubscriptionController(http.Controller):
             return _render_view(
                 is_integrated,
                 "ebill_postfinance_recipient_subscription.subscribe_template",
-                {"submitted_email": email},
+                {
+                    "submitted_email": email,
+                    "error": _(
+                        "We could not start the eBill subscription for this "
+                        "address. Please try again later, or contact us if the "
+                        "problem persists."
+                    ),
+                },
             )
 
     @http.route(
@@ -73,9 +83,11 @@ class EbillSubscriptionController(http.Controller):
         token = post.get("token")
         activation_code = post.get("validation_code")
         email = post.get("email")
-        ebill_service = request.env['ebill.postfinance.service']._get_ebill_service_instance()
 
         try:
+            ebill_service = request.env[
+                "ebill.postfinance.service"
+            ]._get_ebill_service_instance()
             partner_data = ebill_service.confirm_ebill_recipient_subscription(
                 token, activation_code
             )
