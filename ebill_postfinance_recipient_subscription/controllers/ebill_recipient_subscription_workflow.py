@@ -1,6 +1,6 @@
 import logging
 
-from odoo import http
+from odoo import _, http
 from odoo.http import request
 from odoo.tools import email_normalize
 
@@ -30,16 +30,35 @@ class EbillSubscriptionController(http.Controller):
 
         normalized_email = email_normalize(email)
         if not normalized_email:
+            values = {"submitted_email": email}
+            if email:
+                values["error"] = _("Please enter a valid email address.")
             return _render_view(
                 is_integrated,
                 "ebill_postfinance_recipient_subscription.subscribe_template",
-                {"submitted_email": email},
+                values,
             )
 
         try:
             ebill_service = request.env[
                 "ebill.postfinance.service"
             ]._get_ebill_service_instance()
+            if not ebill_service:
+                _logger.error(
+                    "No eBill PostFinance service matches the configured "
+                    "'ebill_postfinance.biller_id'; cannot start subscription."
+                )
+                return _render_view(
+                    is_integrated,
+                    "ebill_postfinance_recipient_subscription.subscribe_template",
+                    {
+                        "submitted_email": email,
+                        "error": _(
+                            "The eBill service is currently unavailable. "
+                            "Please try again later."
+                        ),
+                    },
+                )
             token_sub = ebill_service.initiate_ebill_recipient_subscription(email)
 
             return _render_view(
@@ -60,7 +79,14 @@ class EbillSubscriptionController(http.Controller):
             return _render_view(
                 is_integrated,
                 "ebill_postfinance_recipient_subscription.subscribe_template",
-                {"submitted_email": email},
+                {
+                    "submitted_email": email,
+                    "error": _(
+                        "We could not start the eBill subscription for this "
+                        "address. Please try again later, or contact us if the "
+                        "problem persists."
+                    ),
+                },
             )
 
     @http.route(

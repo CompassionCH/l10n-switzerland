@@ -22,6 +22,10 @@ SERVICE_LOGGER = (
 PARTNER_LOGGER = (
     "odoo.addons.ebill_postfinance_recipient_subscription.models.res_partner"
 )
+CONTROLLER_LOGGER = (
+    "odoo.addons.ebill_postfinance_recipient_subscription.controllers"
+    ".ebill_recipient_subscription_workflow"
+)
 
 
 def protocol_file(name, rows):
@@ -291,3 +295,70 @@ class TestSubscriptionWorkflowHttp(HttpCase):
         )
         self.assertEqual(len(partner), 1)
         self.assertEqual(partner.name, "fallback.user")
+
+    def test_subscribe_get_shows_no_error(self):
+        page = self.url_open("/ebill/subscribe")
+        self.assertEqual(page.status_code, 200)
+        self.assertIn('id="email_input"', page.text)
+        self.assertNotIn("alert-danger", page.text)
+
+    def test_subscribe_rejects_invalid_email_with_message(self):
+        page = self.url_open("/ebill/subscribe")
+        csrf = re.search(r'name="csrf_token" value="([^"]+)"', page.text).group(1)
+        response = self.url_open(
+            "/ebill/subscribe",
+            data={"csrf_token": csrf, "email": "not-an-email"},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("alert-danger", response.text)
+        self.assertIn("valid email address", response.text)
+
+    @mute_logger(CONTROLLER_LOGGER)
+    def test_subscribe_reports_unconfigured_service(self):
+        page = self.url_open("/ebill/subscribe")
+        csrf = re.search(r'name="csrf_token" value="([^"]+)"', page.text).group(1)
+        self.env["ir.config_parameter"].sudo().set_param(
+            "ebill_postfinance.biller_id", "NO-MATCH"
+        )
+        with mock.patch.object(BaseService, "_get_service") as get_service:
+            response = self.url_open(
+                "/ebill/subscribe",
+                data={"csrf_token": csrf, "email": "someone@example.com"},
+            )
+        get_service.assert_not_called()
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("alert-danger", response.text)
+        self.assertIn("currently unavailable", response.text)
+        self.assertNotIn("NO-MATCH", response.text)
+
+    def test_subscribe_post_with_blank_email_shows_no_error(self):
+        """The integrated wizard opens the form by POSTing an empty email."""
+        page = self.url_open("/ebill/subscribe")
+        csrf = re.search(r'name="csrf_token" value="([^"]+)"', page.text).group(1)
+        response = self.url_open(
+            "/ebill/subscribe",
+            data={"csrf_token": csrf, "email": "", "is_integrated": "1"},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('id="email_input"', response.text)
+        self.assertNotIn("alert-danger", response.text)
+
+    @mute_logger(CONTROLLER_LOGGER)
+    def test_subscribe_reports_initiation_failure(self):
+        """The silent failure this ticket is about: SOAP blows up mid-request."""
+        page = self.url_open("/ebill/subscribe")
+        csrf = re.search(r'name="csrf_token" value="([^"]+)"', page.text).group(1)
+        fake = mock.Mock()
+        fake.initiate_ebill_recipient_subscription.side_effect = Exception("boom")
+        with mock.patch.object(BaseService, "_get_service", return_value=fake):
+            response = self.url_open(
+                "/ebill/subscribe",
+                data={
+                    "csrf_token": csrf,
+                    "email": "someone@example.com",
+                    "is_integrated": "1",
+                },
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("alert-danger", response.text)
+        self.assertIn("could not start the eBill subscription", response.text)
