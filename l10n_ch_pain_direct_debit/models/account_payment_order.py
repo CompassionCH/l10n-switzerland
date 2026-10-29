@@ -232,6 +232,22 @@ class AccountPaymentOrder(models.Model):
                 " ", ""
             )[4:9]
 
+            if party_type == "Cdtr":
+                # <CdtrAgt>/<FinInstnId>/  <Othr>/<Id> : ISR participant
+                # number, mandatory for SIX (rejected with CH21 otherwise)
+                isr_participant = partner_bank._get_l10n_ch_isr_participant_id()
+                if not isr_participant:
+                    raise UserError(
+                        self.env._(
+                            "Please set the ISR participant number on the "
+                            "bank account %s.",
+                            partner_bank.display_name,
+                        )
+                    )
+                party_agent_other = etree.SubElement(party_agent_institution, "Othr")
+                party_agent_other_id = etree.SubElement(party_agent_other, "Id")
+                party_agent_other_id.text = isr_participant
+
             res = True
         else:
             res = super().generate_party_agent(
@@ -479,14 +495,15 @@ class AccountPaymentOrder(models.Model):
 
         lines_per_group = {}
         for line in self.payment_ids:
+            # line.date is always today since v18 (see
+            # _prepare_account_payment_vals): use the requested payment date
             key = (
-                line.date,
+                line.payment_line_date,
                 line.payment_line_ids[:1].priority,
                 line.payment_line_ids[:1].local_instrument,
             )
             lines_per_group.setdefault(key, []).append(line)
 
-        index = 0
         for (req_date, prio, local_inst), lines in list(lines_per_group.items()):
             # Creates the tags <PmtInf>/  [<PmtInfId>, <PmtMtd>,
             # <PmtTpInf>, <ReqdColltnDt>]
@@ -524,7 +541,7 @@ class AccountPaymentOrder(models.Model):
             )
 
             if not local_inst:
-                local_inst = lines[index].local_instrument
+                local_inst = lines[0].payment_line_ids[:1].local_instrument
 
             scheme_name_proprietary = ""
             if local_inst == "DDCOR1":
@@ -546,7 +563,6 @@ class AccountPaymentOrder(models.Model):
             self.generate_dd_transaction_information(
                 payment_info, self.company_partner_bank_id, lines, gen_args
             )
-            index = index + 1
 
         # It sets the number of transactions, <NbOfTxs>
         nb_of_transactions_a.text = str(len(self.payment_ids))
