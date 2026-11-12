@@ -1,0 +1,52 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* ebill_postfinance_recipient_subscription
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-12 10:28+0000\n"
+"PO-Revision-Date: 2026-11-12 10:28+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: de\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: \n"
+
+#. module: ebill_postfinance_recipient_subscription
+#. odoo-python
+#: code:addons/ebill_postfinance_recipient_subscription/controllers/ebill_recipient_subscription_workflow.py:0
+msgid "Please enter a valid email address."
+msgstr "Bitte gib eine gültige E-Mail-Adresse ein."
+
+#. module: ebill_postfinance_recipient_subscription
+#. odoo-python
+#: code:addons/ebill_postfinance_recipient_subscription/controllers/ebill_recipient_subscription_workflow.py:0
+msgid "The eBill service is currently unavailable. Please try again later."
+msgstr ""
+"Der eBill-Dienst ist zurzeit nicht verfügbar. Bitte versuche es später noch "
+"einmal."
+
+#. module: ebill_postfinance_recipient_subscription
+#. odoo-python
+#: code:addons/ebill_postfinance_recipient_subscription/controllers/ebill_recipient_subscription_workflow.py:0
+msgid ""
+"Validation failed. Please verify the code or check if an eBill connection is"
+" possible with this email."
+msgstr ""
+"Die Bestätigung ist fehlgeschlagen. Bitte überprüfe den Code oder ob mit "
+"dieser E-Mail-Adresse eine eBill-Verbindung möglich ist."
+
+#. module: ebill_postfinance_recipient_subscription
+#. odoo-python
+#: code:addons/ebill_postfinance_recipient_subscription/controllers/ebill_recipient_subscription_workflow.py:0
+msgid ""
+"We could not start the eBill subscription for this address. Please try again"
+" later, or contact us if the problem persists."
+msgstr ""
+"Wir konnten das eBill-Abonnement für diese Adresse nicht starten. Bitte "
+"versuche es später noch einmal oder kontaktiere uns, wenn das Problem "
+"weiterhin besteht."

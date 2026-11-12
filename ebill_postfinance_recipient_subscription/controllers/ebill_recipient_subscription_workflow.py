@@ -120,7 +120,7 @@ class EbillSubscriptionController(http.Controller):
                     is_integrated,
                     "ebill_postfinance_recipient_subscription.validate_template",
                     {
-                        "error": (
+                        "error": _(
                             "Validation failed. Please verify the code or check "
                             "if an eBill connection is possible with this email."
                         ),
@@ -177,7 +177,7 @@ class EbillSubscriptionController(http.Controller):
                 is_integrated,
                 "ebill_postfinance_recipient_subscription.validate_template",
                 {
-                    "error": (
+                    "error": _(
                         "Validation failed. Please verify the code or check "
                         "if an eBill connection is possible with this email."
                     ),
