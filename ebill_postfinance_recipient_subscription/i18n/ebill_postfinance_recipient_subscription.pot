@@ -1,0 +1,129 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* ebill_postfinance_recipient_subscription
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-12 10:28+0000\n"
+"PO-Revision-Date: 2026-11-12 10:28+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: ebill_postfinance_recipient_subscription
+#: model_terms:ir.ui.view,arch_db:ebill_postfinance_recipient_subscription.retry_content
+msgid "A technical error occurred. Please try the process again."
+msgstr ""
+
+#. module: ebill_postfinance_recipient_subscription
+#: model_terms:ir.ui.view,arch_db:ebill_postfinance_recipient_subscription.validate_template_content
+msgid "Confirm"
+msgstr ""
+
+#. module: ebill_postfinance_recipient_subscription
+#: model:ir.model,name:ebill_postfinance_recipient_subscription.model_res_partner
+msgid "Contact"
+msgstr ""
+
+#. module: ebill_postfinance_recipient_subscription
+#: model_terms:ir.ui.view,arch_db:ebill_postfinance_recipient_subscription.subscribe_template_content
+msgid "Email Address:"
+msgstr ""
+
+#. module: ebill_postfinance_recipient_subscription
+#: model_terms:ir.ui.view,arch_db:ebill_postfinance_recipient_subscription.validate_template_content
+msgid "Enter your validation code"
+msgstr ""
+
+#. module: ebill_postfinance_recipient_subscription
+#. odoo-python
+#: code:addons/ebill_postfinance_recipient_subscription/controllers/ebill_recipient_subscription_workflow.py:0
+msgid "Please enter a valid email address."
+msgstr ""
+
+#. module: ebill_postfinance_recipient_subscription
+#: model:ir.model,name:ebill_postfinance_recipient_subscription.model_ebill_postfinance_service
+msgid "Postfinance eBill service configuration"
+msgstr ""
+
+#. module: ebill_postfinance_recipient_subscription
+#: model_terms:ir.ui.view,arch_db:ebill_postfinance_recipient_subscription.subscribe_template_content
+msgid "Request validation code"
+msgstr ""
+
+#. module: ebill_postfinance_recipient_subscription
+#: model_terms:ir.ui.view,arch_db:ebill_postfinance_recipient_subscription.validate_template_content
+msgid "Resend code"
+msgstr ""
+
+#. module: ebill_postfinance_recipient_subscription
+#: model_terms:ir.ui.view,arch_db:ebill_postfinance_recipient_subscription.retry_content
+msgid "Retry"
+msgstr ""
+
+#. module: ebill_postfinance_recipient_subscription
+#: model_terms:ir.ui.view,arch_db:ebill_postfinance_recipient_subscription.subscribe_template_content
+msgid "Subscribe to E-Bill"
+msgstr ""
+
+#. module: ebill_postfinance_recipient_subscription
+#: model_terms:ir.ui.view,arch_db:ebill_postfinance_recipient_subscription.success_template_content
+msgid "Thank you!"
+msgstr ""
+
+#. module: ebill_postfinance_recipient_subscription
+#. odoo-python
+#: code:addons/ebill_postfinance_recipient_subscription/controllers/ebill_recipient_subscription_workflow.py:0
+msgid "The eBill service is currently unavailable. Please try again later."
+msgstr ""
+
+#. module: ebill_postfinance_recipient_subscription
+#: model_terms:ir.ui.view,arch_db:ebill_postfinance_recipient_subscription.retry_content
+msgid "Unfortunately, something went wrong."
+msgstr ""
+
+#. module: ebill_postfinance_recipient_subscription
+#: model_terms:ir.ui.view,arch_db:ebill_postfinance_recipient_subscription.validate_template_content
+msgid "Validation code:"
+msgstr ""
+
+#. module: ebill_postfinance_recipient_subscription
+#. odoo-python
+#: code:addons/ebill_postfinance_recipient_subscription/controllers/ebill_recipient_subscription_workflow.py:0
+msgid ""
+"Validation failed. Please verify the code or check if an eBill connection is"
+" possible with this email."
+msgstr ""
+
+#. module: ebill_postfinance_recipient_subscription
+#. odoo-python
+#: code:addons/ebill_postfinance_recipient_subscription/controllers/ebill_recipient_subscription_workflow.py:0
+msgid ""
+"We could not start the eBill subscription for this address. Please try again"
+" later, or contact us if the problem persists."
+msgstr ""
+
+#. module: ebill_postfinance_recipient_subscription
+#: model_terms:ir.ui.view,arch_db:ebill_postfinance_recipient_subscription.validate_template_content
+msgid "We have sent a validation code to"
+msgstr ""
+
+#. module: ebill_postfinance_recipient_subscription
+#: model_terms:ir.ui.view,arch_db:ebill_postfinance_recipient_subscription.success_template_content
+msgid "You have successfully subscribed to E-Bill."
+msgstr ""
+
+#. module: ebill_postfinance_recipient_subscription
+#: model:ir.actions.server,name:ebill_postfinance_recipient_subscription.ir_cron_ebill_process_registration_protocols_ir_actions_server
+msgid "eBill: Process Registration Protocols"
+msgstr ""
+
+#. module: ebill_postfinance_recipient_subscription
+#: model_terms:ir.ui.view,arch_db:ebill_postfinance_recipient_subscription.subscribe_template_content
+msgid "mail@example.com"
+msgstr ""
