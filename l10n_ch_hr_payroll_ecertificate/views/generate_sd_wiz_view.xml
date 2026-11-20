@@ -12,6 +12,9 @@
                     <field name="lpp_bvg" />
                     <field name="company_car" />
                     <field name="deduction" />
+                    <field name="lump_sum_rule_ids" widget="many2many_tags" />
+                    <field name="lump_sum_text" />
+                    <field name="child_allowance_by_fund" />
                 </group>
                 <footer>
                     <button

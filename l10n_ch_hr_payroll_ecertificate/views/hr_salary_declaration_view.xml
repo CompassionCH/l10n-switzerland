@@ -11,6 +11,9 @@
                 <field name="date_from" />
                 <field name="date_to" />
                 <field name="gross_income" sum="gross_income" />
+                <field name="lump_sum_other" optional="show" />
+                <field name="lump_sum_other_text" optional="hide" />
+                <field name="child_allowance_by_fund" optional="hide" />
             </list>
         </field>
     </record>

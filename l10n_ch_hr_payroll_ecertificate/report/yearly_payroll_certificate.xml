@@ -24,35 +24,23 @@
                 </CompanyDescription>
                 <Staff>
                     <Person t-foreach="docs" t-as="doc">
+                        <t t-set="particulars" t-value="doc._get_particulars()" />
                         <Particulars>
-                            <Language>
-                                <t t-esc="doc.employee_id.address_home_id.lang[:2]" />
-                                <t
-                                    t-if="doc.employee_id.address_home_id.lang[:2] != 'en'"
-                                >-CH</t>
-                            </Language>
+                            <Language t-esc="particulars['language']" />
                             <DateOfBirth t-esc="doc.employee_id.birthday" />
                             <Social-InsuranceIdentification>
                                 <SV-AS-Number
                                     t-esc="doc.employee_id.identification_id"
                                 />
                             </Social-InsuranceIdentification>
-                            <Lastname
-                                t-esc="doc.employee_id.address_home_id.lastname"
-                            />
-                            <Firstname
-                                t-esc="doc.employee_id.address_home_id.firstname"
-                            />
+                            <Lastname t-esc="particulars['lastname']" />
+                            <Firstname t-esc="particulars['firstname']" />
                             <Address>
-                                <Street
-                                    t-esc="doc.employee_id.address_home_id.street"
-                                />
+                                <Street t-esc="particulars['street']" />
                                 <Postbox />
-                                <ZIP-Code t-esc="doc.employee_id.address_home_id.zip" />
-                                <City t-esc="doc.employee_id.address_home_id.city" />
-                                <Country
-                                    t-esc="doc.employee_id.address_home_id.country_id.name"
-                                />
+                                <ZIP-Code t-esc="particulars['zip']" />
+                                <City t-esc="particulars['city']" />
+                                <Country t-esc="particulars['country']" />
                             </Address>
                         </Particulars>
                         <TaxSalaries>
@@ -77,6 +65,28 @@
                                 <BVG-LPP-Contribution>
                                     <Regular t-esc="doc.bvg_lpp_ded" />
                                 </BVG-LPP-Contribution>
+                                <!-- Same structure as an export of eLohnausweis SSK -->
+                                <Charges t-if="doc.lump_sum_other > 0">
+                                    <LumpSum>
+                                        <Car />
+                                        <Representation />
+                                        <Other>
+                                            <Sum t-esc="doc.lump_sum_other" />
+                                            <Text t-esc="doc.lump_sum_other_text" />
+                                        </Other>
+                                    </LumpSum>
+                                    <Education />
+                                    <Effective>
+                                        <Other>
+                                            <Sum />
+                                            <Text />
+                                        </Other>
+                                    </Effective>
+                                </Charges>
+                                <StandardRemark t-if="doc.child_allowance_by_fund">
+                                    <ChildAllowancePerAHV-AVS
+                                    >True</ChildAllowancePerAHV-AVS>
+                                </StandardRemark>
                             </TaxSalary>
                         </TaxSalaries>
                     </Person>
